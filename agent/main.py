@@ -29,6 +29,8 @@ from crm.hubspot_mcp import upsert_contact, log_email_sent, log_sms_event, log_b
 from observability.langfuse_client import Tracer
 
 app = FastAPI(title="Tenacious Conversion Engine", version="0.1.0")
+os.makedirs("data/briefs", exist_ok=True)
+os.makedirs("data/conversation_state", exist_ok=True)
 PROSPECT_REGISTRY: dict[str, dict] = {}
 
 @app.get("/health")
