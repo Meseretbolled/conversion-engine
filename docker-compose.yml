@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  calcom:
+    image: calcom/cal.com:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://calcom:calcom_password@calcom_db:5432/calcom"
+      NEXTAUTH_SECRET: "super-secret-nextauth-string-change-me"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXT_PUBLIC_WEBAPP_URL: "http://localhost:3000"
+      EMAIL_FROM: "noreply@tenacious.local"
+      EMAIL_SERVER_HOST: ""
+      EMAIL_SERVER_PORT: ""
+      EMAIL_SERVER_USER: ""
+      EMAIL_SERVER_PASSWORD: ""
+      CALENDSO_ENCRYPTION_KEY: "a-random-32-char-encryption-key!!"
+    depends_on:
+      calcom_db:
+        condition: service_healthy
+
+  calcom_db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: calcom
+      POSTGRES_PASSWORD: calcom_password
+      POSTGRES_DB: calcom
+    volumes:
+      - calcom_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calcom"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  calcom_db_data:
