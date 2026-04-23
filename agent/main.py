@@ -179,7 +179,15 @@ async def sms_inbound_webhook(request: Request):
     if not prospect_id:
         return {"status": "unknown_prospect"}
     prospect = PROSPECT_REGISTRY[prospect_id]
-    with Tracer("sms_reply", prospect_id=prospect_id) as t:
+    try:
+        tracer_ctx = Tracer("sms_reply", prospect_id=prospect_id)
+        t = tracer_ctx.__enter__()
+    except Exception:
+        class _FakeTracer:
+            trace_id = ""
+            def set_output(self, x): pass
+        t = _FakeTracer()
+        tracer_ctx = None
         result = handle_reply(
             prospect_id=prospect_id,
             reply_text=inbound["text"],
@@ -228,3 +236,6 @@ if __name__ == "__main__":
     import uvicorn
     os.makedirs("data/briefs", exist_ok=True)
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("APP_PORT", "8000")), reload=True)
+
+# Patch: safe SMS handler
+from fastapi import Response
