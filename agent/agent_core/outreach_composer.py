@@ -17,6 +17,18 @@ SEGMENT_PROMPTS = {
     None: "No strong ICP signal. Write a brief, non-intrusive exploratory email without claiming specifics.",
 }
 
+def _clean_marker(line: str, marker: str) -> str:
+    """Strip a marker like SUBJECT: or **SUBJECT:** from the start of a line."""
+    clean = line.strip().lstrip("*").strip()
+    if clean.upper().startswith(marker.upper()):
+        return clean[len(marker):].strip().lstrip("*").strip()
+    return ""
+
+def _is_marker(line: str, marker: str) -> bool:
+    """Check if a line starts with a marker, handling ** bold markdown."""
+    clean = line.strip().lstrip("*").strip()
+    return clean.upper().startswith(marker.upper())
+
 def compose_outreach_email(icp_result: ICPResult, hiring_brief, competitor_brief,
                             prospect_first_name="there", prospect_title="", trace_id=None):
     cb = hiring_brief.get("crunchbase") or {}
@@ -71,7 +83,7 @@ Competitor gap finding (weave in if confidence medium/high):
 HONESTY CONSTRAINTS:
 {chr(10).join('- ' + h for h in honesty)}
 
-Output format:
+Output format (no markdown, no asterisks):
 SUBJECT: <subject line>
 BODY:
 <email body>"""
@@ -79,14 +91,33 @@ BODY:
     text, usage = chat(messages=[{"role":"user","content":prompt}], temperature=0.4, max_tokens=400, trace_id=trace_id)
     subject, body = "", text
     lines = text.strip().split("\n")
+
     for i, line in enumerate(lines):
-        if line.upper().startswith("SUBJECT:"):
-            subject = line[8:].strip()
+        if _is_marker(line, "SUBJECT:"):
+            subject = _clean_marker(line, "SUBJECT:")
             rest = lines[i+1:]
-            if rest and rest[0].strip().upper() == "BODY:":
+            # Skip BODY: marker line if present
+            if rest and _is_marker(rest[0], "BODY:"):
                 rest = rest[1:]
             body = "\n".join(rest).strip()
             break
-    return {"subject": subject, "body": body, "variant": icp_result.pitch_variant,
-        "segment": seg, "ai_maturity_score": ai_score, "confidence": icp_result.confidence_label,
-        "confidence_notes": honesty, "llm_usage": usage}
+
+    # Fallback: if no subject found, use first line as subject
+    if not subject and lines:
+        subject = lines[0].strip().lstrip("*").strip()
+        body = "\n".join(lines[1:]).strip()
+
+    # Clean any remaining ** markdown from subject and body
+    subject = subject.replace("**", "").strip()
+    body = body.replace("**BODY:**", "").replace("**SUBJECT:**", "").strip()
+
+    return {
+        "subject": subject,
+        "body": body,
+        "variant": icp_result.pitch_variant,
+        "segment": seg,
+        "ai_maturity_score": ai_score,
+        "confidence": icp_result.confidence_label,
+        "confidence_notes": honesty,
+        "llm_usage": usage,
+    }
