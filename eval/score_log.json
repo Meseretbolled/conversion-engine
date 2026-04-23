@@ -1,24 +1,16 @@
-[
-  {
-    "run_id": "baseline_dev_v2_terminal",
-    "tag": "baseline",
-    "timestamp": "2026-04-23T01:49:00",
-    "domain": "retail",
-    "agent": "llm_agent",
-    "agent_model": "openrouter/deepseek/deepseek-chat",
-    "user_model": "openrouter/deepseek/deepseek-chat",
-    "num_tasks": 30,
-    "num_trials": 5,
-    "total_trials": 150,
-    "infra_errors": 5,
-    "evaluated": 145,
-    "pass_at_1": 0.12,
-    "successes": 17,
-    "ci_95_low": 0.075,
-    "ci_95_high": 0.165,
-    "ci_width": 0.09,
-    "published_reference": 0.42,
-    "delta_vs_published": -0.30,
-    "note": "Numbers from terminal output — later runs failed due to OpenRouter credit limit"
-  }
-]
+{
+  "avg_agent_cost": 0.0199,
+  "domain": "retail",
+  "evaluated_simulations": 150,
+  "git_commit": "d11a97072c49d093f7b5a3e4fe9da95b490d43ba",
+  "infra_error_count": 0,
+  "num_trials": 5,
+  "p50_latency_seconds": 105.9521,
+  "p95_latency_seconds": 551.6491,
+  "pass_at_1": 0.7267,
+  "pass_at_1_ci_95": [
+    0.6504,
+    0.7917
+  ],
+  "total_tasks": 30
+}
