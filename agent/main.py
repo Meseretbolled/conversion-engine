@@ -188,20 +188,20 @@ async def sms_inbound_webhook(request: Request):
             def set_output(self, x): pass
         t = _FakeTracer()
         tracer_ctx = None
-        result = handle_reply(
-            prospect_id=prospect_id,
-            reply_text=inbound["text"],
-            channel="sms",
-            hiring_brief=prospect["hiring_brief"],
-            icp_result_dict=prospect["icp"],
-            prospect_email=prospect["email"],
-            trace_id=t.trace_id,
-        )
-        send_sms(to_number=inbound["from_number"], message=result["response_text"][:459])
-        if prospect.get("contact_id"):
-            log_sms_event(prospect["contact_id"], "inbound", inbound["text"])
-            log_sms_event(prospect["contact_id"], "outbound", result["response_text"])
-        t.set_output(result)
+    result = handle_reply(
+        prospect_id=prospect_id,
+        reply_text=inbound["text"],
+        channel="sms",
+        hiring_brief=prospect["hiring_brief"],
+        icp_result_dict=prospect["icp"],
+        prospect_email=prospect["email"],
+        trace_id=t.trace_id,
+    )
+    send_sms(to_number=inbound["from_number"], message=result["response_text"][:459])
+    if prospect.get("contact_id"):
+        log_sms_event(prospect["contact_id"], "inbound", inbound["text"])
+        log_sms_event(prospect["contact_id"], "outbound", result["response_text"])
+    t.set_output(result)
     return {"status": "replied"}
 
 @app.post("/webhooks/calcom/booking")
