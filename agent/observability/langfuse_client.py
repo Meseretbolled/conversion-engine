@@ -10,7 +10,7 @@ def get_client() -> Langfuse:
         _client = Langfuse(
             public_key=os.environ["LANGFUSE_PUBLIC_KEY"],
             secret_key=os.environ["LANGFUSE_SECRET_KEY"],
-            host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
+            host=os.getenv("LANGFUSE_HOST", "https://eu.cloud.langfuse.com"),
         )
     return _client
 

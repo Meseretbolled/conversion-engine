@@ -107,7 +107,7 @@ def run_tau2(agent, agent_model, user_model, num_trials, num_tasks, save_to):
         results_path.unlink()
 
     cmd = [
-        "tau2", "run",
+        "/home/meseret/Documents/conversion-engine/harness/tau2-bench/.venv/bin/tau2", "run",
         "--domain",     "retail",
         "--agent",      agent,
         "--agent-llm",  agent_model,

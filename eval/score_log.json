@@ -1,1 +1,45 @@
-[]
+[
+  {
+    "run_id": "baseline_dev_v2_terminal",
+    "tag": "baseline",
+    "timestamp": "2026-04-23T01:49:00",
+    "domain": "retail",
+    "agent": "llm_agent",
+    "agent_model": "openrouter/deepseek/deepseek-chat",
+    "num_tasks": 30,
+    "num_trials": 5,
+    "total_trials": 150,
+    "infra_errors": 5,
+    "evaluated": 145,
+    "pass_at_1": 0.12,
+    "successes": 17,
+    "ci_95_low": 0.075,
+    "ci_95_high": 0.165,
+    "ci_width": 0.09,
+    "published_reference": 0.42,
+    "delta_vs_published": -0.3,
+    "note": "Numbers from terminal output \u2014 results.json had infrastructure errors from broken API key"
+  },
+  {
+    "run_id": "aef08144",
+    "tag": "baseline",
+    "timestamp": "2026-04-23T00:26:58.889232",
+    "domain": "retail",
+    "agent": "llm_agent",
+    "agent_model": "openrouter/deepseek/deepseek-chat",
+    "user_model": "openrouter/deepseek/deepseek-chat",
+    "num_tasks": 30,
+    "num_trials": 5,
+    "pass_at_1": 0.0,
+    "successes": 0,
+    "total_trials": 150,
+    "infra_errors": 0,
+    "ci_95_low": 0.0,
+    "ci_95_high": 0.025,
+    "ci_width": 0.025,
+    "published_reference": 0.42,
+    "delta_vs_published": -0.42,
+    "wall_seconds": 3954.4,
+    "results_path": "/home/meseret/Documents/conversion-engine/harness/tau2-bench/data/simulations/baseline_aef08144/results.json"
+  }
+]
