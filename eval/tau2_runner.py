@@ -78,7 +78,7 @@ def parse_results(results_path):
         pass_1 = rm.get("pass_1") or rm.get("average_reward") or 0.0
         if pass_1 > 1.0:
             pass_1 /= 100.0
-        total  = data.get("num_tasks", 30) * data.get("num_trials", 5)
+        total  = data.get("num_tasks", 30) * data.get("num_trials", 1)
         passed = round(pass_1 * total)
 
     pass_at_1     = round(passed / max(total, 1), 4)
