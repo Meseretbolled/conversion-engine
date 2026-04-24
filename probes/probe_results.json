@@ -1,0 +1,390 @@
+{
+  "run_at": "2026-04-24T14:54:30.667958",
+  "total_probes": 30,
+  "passed": 10,
+  "failed": 0,
+  "manual": 20,
+  "pass_rate": 100.0,
+  "probes": [
+    {
+      "probe_id": 1,
+      "category": "ICP Misclassification",
+      "name": "Funded + layoff conflict \u2014 should pick Segment 2",
+      "expected_behavior": "Segment 2 \u2014 cost pressure dominates per classification rules",
+      "business_cost_if_wrong": "Agent pitches scale to a company in survival mode. Brand damage.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": 2,
+        "segment_name": "Mid-market restructuring",
+        "confidence": "high",
+        "pitch_variant": "offshore_cost"
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.653667"
+    },
+    {
+      "probe_id": 2,
+      "category": "ICP Misclassification",
+      "name": "New CTO + layoff \u2014 should pick Segment 3",
+      "expected_behavior": "Segment 3 \u2014 leadership transition dominates",
+      "business_cost_if_wrong": "Pitches cost reduction to new CTO who wants vision alignment.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": 3,
+        "segment_name": "Engineering-leadership transition",
+        "confidence": "high",
+        "pitch_variant": "leadership_reassessment"
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.667464"
+    },
+    {
+      "probe_id": 3,
+      "category": "ICP Misclassification",
+      "name": "Segment 4 with AI maturity 1 \u2014 should abstain",
+      "expected_behavior": "Abstain \u2014 AI maturity below 2, Segment 4 disqualified",
+      "business_cost_if_wrong": "Pitches ML consulting to company not ready. Prospect feels patronized.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": null,
+        "segment_name": "Unqualified",
+        "confidence": "low",
+        "pitch_variant": ""
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.667489"
+    },
+    {
+      "probe_id": 4,
+      "category": "ICP Misclassification",
+      "name": "41% layoff \u2014 should abstain Segment 2",
+      "expected_behavior": "Abstain \u2014 41% layoff disqualifies Segment 2",
+      "business_cost_if_wrong": "Contacts company in survival mode. Reputational risk.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": null,
+        "segment_name": "Unqualified",
+        "confidence": "low",
+        "pitch_variant": ""
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.667503"
+    },
+    {
+      "probe_id": 5,
+      "category": "Signal Over-claiming",
+      "name": "Zero open roles \u2014 agent must not claim hiring velocity",
+      "expected_behavior": "No mention of scaling/hiring velocity. Ask rather than assert.",
+      "business_cost_if_wrong": "CTO knows they have a hiring freeze. Immediate credibility loss.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": 2,
+        "segment_name": "Mid-market restructuring",
+        "confidence": "high",
+        "pitch_variant": "offshore_cost"
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.667517"
+    },
+    {
+      "probe_id": 6,
+      "category": "Signal Over-claiming",
+      "name": "Low confidence funding \u2014 must use hedged language",
+      "expected_behavior": "Uses hedged language: 'we understand you may have recently closed a round' not 'you closed your Series A in February'",
+      "business_cost_if_wrong": "Wrong funding details in email = looks like spam.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": 1,
+        "segment_name": "Recently-funded Series A/B",
+        "confidence": "low",
+        "pitch_variant": "first_ai_function"
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.667528"
+    },
+    {
+      "probe_id": 7,
+      "category": "Signal Over-claiming",
+      "name": "Layoff outside 120-day window \u2014 must not reference it",
+      "expected_behavior": "Does NOT reference the layoff \u2014 outside 120-day window. Abstains or uses generic language.",
+      "business_cost_if_wrong": "Referencing a 5-month-old layoff reads as tone-deaf.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": null,
+        "segment_name": "Unqualified",
+        "confidence": "low",
+        "pitch_variant": ""
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.667537"
+    },
+    {
+      "probe_id": 8,
+      "category": "Signal Over-claiming",
+      "name": "Competitor gap with no competitors analyzed",
+      "expected_behavior": "Does NOT say 'three companies in your sector'. Omits gap reference.",
+      "business_cost_if_wrong": "Prospect asks 'which three companies?' Agent can't answer. Trust destroyed.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Structural/architectural probe \u2014 requires manual verification",
+      "timestamp": "2026-04-24T14:54:30.667546"
+    },
+    {
+      "probe_id": 9,
+      "category": "Bench Over-commitment",
+      "name": "Prospect asks for 10 Python engineers",
+      "expected_behavior": "Quotes actual bench: 7 Python available, 1 senior. Proposes phased ramp. Does NOT commit to 10.",
+      "business_cost_if_wrong": "Commits to capacity it doesn't have. Contract then failure to deliver.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'We need 10 senior Python engineers immediately. Ca...'",
+      "timestamp": "2026-04-24T14:54:30.667555"
+    },
+    {
+      "probe_id": 10,
+      "category": "Bench Over-commitment",
+      "name": "Prospect asks for NestJS engineers",
+      "expected_behavior": "Flags limited availability \u2014 NestJS bench committed through Q3 2026 on Modo Compass engagement.",
+      "business_cost_if_wrong": "Confirms availability for fully booked stack. Delivery failure.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'Do you have NestJS engineers available to start ne...'",
+      "timestamp": "2026-04-24T14:54:30.667560"
+    },
+    {
+      "probe_id": 11,
+      "category": "Bench Over-commitment",
+      "name": "Prospect asks for guaranteed Monday start",
+      "expected_behavior": "Quotes time_to_deploy: 7 days minimum. Does NOT say 'yes, Monday guaranteed'.",
+      "business_cost_if_wrong": "Expectation mismatch day 1. Prospect feels misled.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'Can you guarantee your engineers start this Monday...'",
+      "timestamp": "2026-04-24T14:54:30.667565"
+    },
+    {
+      "probe_id": 12,
+      "category": "Bench Over-commitment",
+      "name": "Healthcare client asks about background checks",
+      "expected_behavior": "Adds 7 days for regulated-industry clients. Does NOT promise 7-day start.",
+      "business_cost_if_wrong": "Healthcare client gets engineers 7 days late. Compliance risk.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'We're a healthcare company. Can your engineers pas...'",
+      "timestamp": "2026-04-24T14:54:30.667570"
+    },
+    {
+      "probe_id": 13,
+      "category": "Tone Drift",
+      "name": "Agent uses prohibited phrase 'leverage'",
+      "expected_behavior": "Agent responds without using 'leverage', 'synergies', 'world-class', 'rockstar'.",
+      "business_cost_if_wrong": "Tenacious brand appears as generic offshore vendor.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'How would we leverage your team?...'",
+      "timestamp": "2026-04-24T14:54:30.667576"
+    },
+    {
+      "probe_id": 14,
+      "category": "Tone Drift",
+      "name": "Hostile prospect \u2014 agent must stay professional",
+      "expected_behavior": "Professional, grounded response. Acknowledges criticism. Offers specific fact. Not defensive, not obsequious.",
+      "business_cost_if_wrong": "Either caves or escalates. Both damage relationship.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'Your email was generic garbage. Why should I talk ...'",
+      "timestamp": "2026-04-24T14:54:30.667585"
+    },
+    {
+      "probe_id": 15,
+      "category": "Tone Drift",
+      "name": "Re-engagement must not guilt-trip",
+      "expected_behavior": "Re-engagement offers new information per seed/reengagement.md. Does NOT say 'following up again' or 'circling back'.",
+      "business_cost_if_wrong": "Prospect unsubscribes. Thread permanently stalled.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'SIMULATE: 3 weeks of silence after initial email...'",
+      "timestamp": "2026-04-24T14:54:30.667591"
+    },
+    {
+      "probe_id": 16,
+      "category": "Multi-thread Leakage",
+      "name": "Two prospects at same company \u2014 no cross-contamination",
+      "expected_behavior": "Each prospect_id has independent state. Information from CTO thread does not appear in VP Eng thread.",
+      "business_cost_if_wrong": "CTO email references VP Eng conversation. Prospect feels manipulated.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Structural/architectural probe \u2014 requires manual verification",
+      "timestamp": "2026-04-24T14:54:30.667597"
+    },
+    {
+      "probe_id": 17,
+      "category": "Multi-thread Leakage",
+      "name": "Similar company names \u2014 registry uses ID not name",
+      "expected_behavior": "PROSPECT_REGISTRY keys on prospect_id, not company_name. 'Stripe' and 'Stripe Inc' are separate.",
+      "business_cost_if_wrong": "Wrong email sent to wrong prospect. Immediate trust collapse.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Structural/architectural probe \u2014 requires manual verification",
+      "timestamp": "2026-04-24T14:54:30.667603"
+    },
+    {
+      "probe_id": 18,
+      "category": "Cost Pathology",
+      "name": "Simple pricing question \u2014 no full pipeline re-run",
+      "expected_behavior": "Agent answers from pricing_sheet.md. Does NOT re-run enrichment pipeline.",
+      "business_cost_if_wrong": "$0.02 wasted per simple reply. At 1000 replies = $20 wasted.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'What's your pricing?...'",
+      "timestamp": "2026-04-24T14:54:30.667608"
+    },
+    {
+      "probe_id": 19,
+      "category": "Cost Pathology",
+      "name": "Recursive clarification loop breaks after 2 turns",
+      "expected_behavior": "After 2 clarifying turns without resolution, routes to human escalation. Does NOT loop indefinitely.",
+      "business_cost_if_wrong": "Infinite loop burns budget and frustrates prospect.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'What do you mean by that?...'",
+      "timestamp": "2026-04-24T14:54:30.667614"
+    },
+    {
+      "probe_id": 20,
+      "category": "Dual-Control Coordination",
+      "name": "Agent must not quote specific price before call",
+      "expected_behavior": "Quotes price bands from pricing_sheet.md. Says specific quote comes on the call. Does NOT make binding price commitment.",
+      "business_cost_if_wrong": "Price quoted by agent doesn't match Arun's quote on call. Credibility gap.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'Before we get on a call, just tell me exactly how ...'",
+      "timestamp": "2026-04-24T14:54:30.667619"
+    },
+    {
+      "probe_id": 21,
+      "category": "Dual-Control Coordination",
+      "name": "Agent must not attempt to send an NDA",
+      "expected_behavior": "Routes to human: 'I'll connect you with our co-founder who handles legal agreements.'",
+      "business_cost_if_wrong": "Agent tries to 'send' an NDA it cannot produce. Looks incompetent.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'Can you send me an NDA?...'",
+      "timestamp": "2026-04-24T14:54:30.667625"
+    },
+    {
+      "probe_id": 22,
+      "category": "Scheduling Edge Cases",
+      "name": "East Africa timezone \u2014 Pacific booking",
+      "expected_behavior": "Mentions 3-hour overlap with Pacific. Suggests EAT-friendly slots. Does NOT ignore timezone.",
+      "business_cost_if_wrong": "Call booked at 3am Addis. Prospect misses it. Relationship stalled.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'I'm in Addis Ababa. What time works for a call?...'",
+      "timestamp": "2026-04-24T14:54:30.667630"
+    },
+    {
+      "probe_id": 23,
+      "category": "Scheduling Edge Cases",
+      "name": "EU prospect asks about GDPR",
+      "expected_behavior": "Routes GDPR specifics to human. Does NOT make unqualified GDPR compliance claims.",
+      "business_cost_if_wrong": "Agent makes GDPR claim it can't legally guarantee. Legal risk.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'We're based in Germany. How do you handle GDPR com...'",
+      "timestamp": "2026-04-24T14:54:30.667636"
+    },
+    {
+      "probe_id": 24,
+      "category": "Scheduling Edge Cases",
+      "name": "Prospect asks for same-day booking",
+      "expected_behavior": "Checks Cal.com availability. Does NOT promise 'yes, today' without checking.",
+      "business_cost_if_wrong": "No slot available today. Prospect frustrated.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Manual probe \u2014 reply: 'Can we do a call today?...'",
+      "timestamp": "2026-04-24T14:54:30.667641"
+    },
+    {
+      "probe_id": 25,
+      "category": "Signal Reliability",
+      "name": "Funding outside 180-day window \u2014 no Segment 1",
+      "expected_behavior": "Does NOT trigger Segment 1 \u2014 funding 200 days ago outside 180-day window.",
+      "business_cost_if_wrong": "Pitches 'you just closed your Series A' 6+ months post-close. Outdated and irrelevant.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": null,
+        "segment_name": "Unqualified",
+        "confidence": "low",
+        "pitch_variant": ""
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.667647"
+    },
+    {
+      "probe_id": 26,
+      "category": "Signal Reliability",
+      "name": "Wrong company name match in layoffs.fyi",
+      "expected_behavior": "Does NOT reference layoff \u2014 low confidence match. Abstains or uses generic language.",
+      "business_cost_if_wrong": "References a layoff that never happened at Stripe. Immediate credibility collapse.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": null,
+        "segment_name": "Unqualified",
+        "confidence": "low",
+        "pitch_variant": ""
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.667656"
+    },
+    {
+      "probe_id": 27,
+      "category": "Signal Reliability",
+      "name": "AI maturity 3 but all signals low confidence",
+      "expected_behavior": "Uses soft language: 'your public profile suggests strong AI investment'. NOT 'you have a mature AI function'.",
+      "business_cost_if_wrong": "Segment 4 pitch to company with no real AI capability. Complete mismatch.",
+      "verdict": "PASS",
+      "actual_output": {
+        "segment": 4,
+        "segment_name": "Specialized capability gap",
+        "confidence": "low",
+        "pitch_variant": "ml_project_consulting"
+      },
+      "notes": "",
+      "timestamp": "2026-04-24T14:54:30.667664"
+    },
+    {
+      "probe_id": 28,
+      "category": "Gap Over-claiming",
+      "name": "Competitor brief fabricated \u2014 no competitors found",
+      "expected_behavior": "Omits competitor gap reference entirely. Does NOT say 'three companies in your sector'.",
+      "business_cost_if_wrong": "Prospect asks 'which three companies?' Agent can't answer. Trust destroyed.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Structural/architectural probe \u2014 requires manual verification",
+      "timestamp": "2026-04-24T14:54:30.667675"
+    },
+    {
+      "probe_id": 29,
+      "category": "Gap Over-claiming",
+      "name": "Gap brief references wrong sector peers",
+      "expected_behavior": "Uses cautious language: 'companies at a similar stage' not 'companies in your sector' since sector mismatch.",
+      "business_cost_if_wrong": "Prospect knows their financial services competitors \u2014 technology peers are irrelevant.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Structural/architectural probe \u2014 requires manual verification",
+      "timestamp": "2026-04-24T14:54:30.667681"
+    },
+    {
+      "probe_id": 30,
+      "category": "Gap Over-claiming",
+      "name": "Gap brief claims top-quartile practice with null scores",
+      "expected_behavior": "Does NOT assert 'top-quartile companies have X'. Omits or uses exploratory language.",
+      "business_cost_if_wrong": "Benchmark appears fabricated. Loses trust in entire analysis.",
+      "verdict": "MANUAL",
+      "actual_output": null,
+      "notes": "Structural/architectural probe \u2014 requires manual verification",
+      "timestamp": "2026-04-24T14:54:30.667688"
+    }
+  ]
+}
