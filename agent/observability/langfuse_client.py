@@ -1,13 +1,4 @@
-"""
-agent/observability/langfuse_client.py
-Langfuse tracing using SDK v3 (OpenTelemetry-based).
 
-SDK v3 uses get_client() and start_as_current_observation() context manager.
-Environment variables required:
-  LANGFUSE_PUBLIC_KEY
-  LANGFUSE_SECRET_KEY
-  LANGFUSE_BASE_URL = https://cloud.langfuse.com  (EU region)
-"""
 import os
 import time
 import uuid
@@ -23,8 +14,6 @@ def get_client():
     if _client is None:
         try:
             from langfuse import get_client as _get_client
-            # Set env vars before getting client
-            # SDK v3 reads from environment automatically
             _client = _get_client()
             logger.info("Langfuse client initialized successfully")
         except Exception as e:
@@ -33,10 +22,21 @@ def get_client():
     return _client
 
 
+def flush():
+    """Force flush all pending spans to Langfuse. Call after every pipeline run."""
+    lf = get_client()
+    if lf:
+        try:
+            time.sleep(0.5)  # give spans time to close
+            lf.flush()
+            logger.info("Langfuse flush completed")
+        except Exception as e:
+            logger.warning(f"Langfuse flush failed: {e}")
+
+
 class Tracer:
     """
     Context manager for tracing an outreach pipeline run.
-    Uses Langfuse SDK v3 start_as_current_observation() API.
 
     Usage:
         with Tracer("outreach_pipeline", prospect_id="abc") as t:
@@ -45,7 +45,7 @@ class Tracer:
     """
 
     def __init__(self, name: str, **metadata):
-        self.trace_id = str(uuid.uuid4()).replace("-", "")[:32]  # 32-char hex for v3
+        self.trace_id = str(uuid.uuid4()).replace("-", "")[:32]
         self.name = name
         self.metadata = metadata
         self._start = time.monotonic()
@@ -92,6 +92,31 @@ class Tracer:
             except Exception as e:
                 logger.warning(f"Langfuse log_span failed: {e}")
 
+    def log_llm_call(self, model: str, prompt_tokens: int,
+                     completion_tokens: int, cost_usd: float,
+                     input_text: str, output_text: str):
+        """Log an LLM generation span inside this trace."""
+        lf = get_client()
+        if lf:
+            try:
+                with lf.start_as_current_observation(
+                    as_type="generation",
+                    name="llm_call",
+                    model=model,
+                    input=input_text[:2000],
+                ) as gen:
+                    gen.update(
+                        output=output_text[:2000],
+                        usage={
+                            "input": prompt_tokens,
+                            "output": completion_tokens,
+                            "total": prompt_tokens + completion_tokens,
+                        },
+                        metadata={"cost_usd": cost_usd},
+                    )
+            except Exception as e:
+                logger.warning(f"Langfuse log_llm_call failed: {e}")
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         latency_ms = int((time.monotonic() - self._start) * 1000)
         if self._span:
@@ -100,7 +125,7 @@ class Tracer:
                     metadata={
                         **self.metadata,
                         "latency_ms": latency_ms,
-                        "error": str(exc_val) if exc_val else None
+                        "error": str(exc_val) if exc_val else None,
                     }
                 )
             except Exception:
@@ -110,14 +135,9 @@ class Tracer:
                 self._span_ctx.__exit__(exc_type, exc_val, exc_tb)
             except Exception:
                 pass
-        # Flush after each trace
-        lf = get_client()
-        if lf:
-            try:
-                lf.flush()
-            except Exception:
-                pass
-        return False  # don't suppress exceptions
+        # Flush with delay to ensure spans are sent
+        flush()
+        return False
 
 
 def log_llm_call(
@@ -129,7 +149,7 @@ def log_llm_call(
     input_text: str,
     output_text: str,
 ):
-    """Log an LLM generation to Langfuse."""
+    """Standalone LLM call logger outside a Tracer context."""
     lf = get_client()
     if lf:
         try:
@@ -148,6 +168,6 @@ def log_llm_call(
                     },
                     metadata={"cost_usd": cost_usd},
                 )
-            lf.flush()
+            flush()
         except Exception as e:
             logger.warning(f"Langfuse log_llm_call failed: {e}")
