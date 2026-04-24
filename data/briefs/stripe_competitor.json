@@ -1,0 +1,15 @@
+{
+  "company": "Stripe",
+  "sector": "technology",
+  "generated_at": "2026-04-23T17:48:17.835125",
+  "prospect_ai_score": 0,
+  "competitors_analyzed": [],
+  "top_quartile_score": null,
+  "sector_median_score": null,
+  "prospect_position": null,
+  "gaps": [],
+  "narrative": "Based on public data, Stripe shows a 0/3 AI maturity score in the technology sector. Comparable companies are actively building dedicated AI functions \u2014 a gap that typically takes 6\u201312 months to close.",
+  "errors": [
+    "No companies found in sector 'technology'"
+  ]
+}

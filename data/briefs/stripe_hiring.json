@@ -1,0 +1,103 @@
+{
+  "company": "Stripe",
+  "generated_at": "2026-04-23T17:46:23.397178",
+  "schema_version": "1.1",
+  "crunchbase": {
+    "confidence": "low",
+    "evidence": "No Crunchbase record found for 'Stripe'."
+  },
+  "funding_signal": {
+    "is_recent": false,
+    "is_series_ab": false,
+    "confidence": "low",
+    "evidence": "No funding data available in Crunchbase record."
+  },
+  "layoff_signal": {
+    "company": "Stripe",
+    "date": "2025-01-21 00:00:00",
+    "laid_off_count": 300.0,
+    "percentage": 0.03,
+    "stage": "Series I",
+    "source": "https://www.businessinsider.com/stripe-layoffs-staff-payments-memo-2025-1",
+    "within_120_days": true,
+    "confidence": "high",
+    "evidence": "Layoff of 300.0 employees (0.03%) on 2025-01-21 00:00:00 \u2014 within 120-day window."
+  },
+  "job_signal": {
+    "company": "Stripe",
+    "scraped_at": "2026-04-23T17:46:23.474743",
+    "total_open_roles": 0,
+    "ai_roles": 0,
+    "engineering_roles": 0,
+    "detected_stack": [],
+    "raw_titles": [],
+    "source_url": "",
+    "error": "Page.goto: Timeout 15000ms exceeded.\nCall log:\nnavigating to \"https://wellfound.com/company/stripe/jobs\", waiting until \"domcontentloaded\"\n",
+    "confidence": "low",
+    "evidence": "Found 0 open roles (0 engineering, 0 AI-adjacent). Weak signal \u2014 fewer than 5 open roles. Do not assert aggressive hiring."
+  },
+  "leadership_signal": {
+    "signal": "leadership_change",
+    "detected": false,
+    "title": null,
+    "name": null,
+    "days_since_appointment": null,
+    "within_90_days": false,
+    "confidence": "low",
+    "source": "no_signal",
+    "evidence": "No CTO/VP Engineering transition found for Stripe in last 90 days."
+  },
+  "ai_maturity": {
+    "score": 0,
+    "confidence": "low",
+    "summary": "No public signal of AI engagement found.",
+    "signals": [
+      {
+        "name": "ai_open_roles_fraction",
+        "present": false,
+        "evidence": "0 AI-adjacent openings out of 0 engineering roles",
+        "confidence": "low"
+      },
+      {
+        "name": "named_ai_leadership",
+        "present": false,
+        "evidence": "No named AI leader found publicly",
+        "confidence": "medium"
+      },
+      {
+        "name": "github_ai_activity",
+        "present": false,
+        "evidence": "No public AI repos found",
+        "confidence": "medium"
+      },
+      {
+        "name": "exec_ai_commentary",
+        "present": false,
+        "evidence": "No recent exec AI commentary",
+        "confidence": "medium"
+      },
+      {
+        "name": "modern_ml_stack",
+        "present": false,
+        "evidence": "No ML stack tools detected",
+        "confidence": "low"
+      },
+      {
+        "name": "strategic_ai_comms",
+        "present": false,
+        "evidence": "No AI in strategic comms",
+        "confidence": "low"
+      }
+    ]
+  },
+  "icp_segment_signals": [
+    {
+      "segment": 2,
+      "name": "Mid-market restructuring",
+      "confidence": "high",
+      "evidence": "Layoff of 300.0 employees (0.03%) on 2025-01-21 00:00:00 \u2014 within 120-day window.",
+      "rationale": "Layoff of 300.0 (0.03%) on 2025-01-21 00:00:00."
+    }
+  ],
+  "errors": []
+}
