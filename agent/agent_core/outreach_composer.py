@@ -155,7 +155,9 @@ SEGMENT INSTRUCTION:
 {seg_prompt}
 
 STYLE GUIDE:
-{STYLE_GUIDE[:1500].replace('{CALCOM_BOOKING_URL}', CALCOM_BOOKING_URL)}
+{STYLE_GUIDE[:1500]}
+
+BOOKING LINK (include this exact URL in the email CTA): {CALCOM_BOOKING_URL}
 
 PROSPECT:
 - Name: {prospect_first_name}{f' ({prospect_title})' if prospect_title else ''}
