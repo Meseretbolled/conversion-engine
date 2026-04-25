@@ -1,0 +1,236 @@
+{
+  "description": "Evidence graph mapping every numeric claim in memo.pdf to its source trace file, invoice line, or published reference. Required per Act V rubric.",
+  "generated_at": "2026-04-25",
+  "claims": [
+    {
+      "claim_id": "C01",
+      "claim": "tau2-bench published reference (GPT-5 class): 42% pass@1",
+      "value": "42%",
+      "source_type": "published",
+      "source": "tau2-bench leaderboard, Feb 2026 (github.com/sierra-research/tau2-bench)",
+      "trace_id": null,
+      "file_ref": "eval/score_log.json",
+      "notes": "Field: published_reference in score_log.json entries"
+    },
+    {
+      "claim_id": "C02",
+      "claim": "Program baseline pass@1: 72.67%, 95% CI [65.04%, 79.17%]",
+      "value": "72.67%",
+      "source_type": "trace",
+      "source": "eval/score_log.json — entry with git_commit d11a97072c49d093f7b5a3e4fe9da95b490d43ba",
+      "trace_id": "d11a97072c49d093f7b5a3e4fe9da95b490d43ba",
+      "file_ref": "eval/score_log.json",
+      "notes": "150 simulations, 5 trials x 30 tasks, Qwen3-Next-80B-A3B model"
+    },
+    {
+      "claim_id": "C03",
+      "claim": "tenacious_method_v3 pass@1: 56.67%, 95% CI [39.2%, 72.62%]",
+      "value": "56.67%",
+      "source_type": "trace",
+      "source": "eval/score_log.json — run_id 7c27bbd6, tag tenacious_method_v3",
+      "trace_id": "7c27bbd6",
+      "file_ref": "eval/score_log.json, eval/tau2_raw_tenacious_method_v3.json",
+      "notes": "30 simulations, 1 trial x 30 tasks, Qwen3-Next-80B-A3B model"
+    },
+    {
+      "claim_id": "C04",
+      "claim": "Delta A (tenacious_method_v3 − baseline): -16pp",
+      "value": "-0.16",
+      "source_type": "derived",
+      "source": "Computed from C02 and C03: 0.5667 - 0.7267 = -0.16",
+      "trace_id": null,
+      "file_ref": "eval/ablation_results.json",
+      "notes": "Negative Delta A explained by trial count (1 vs 5) and domain mismatch. Full explanation in ablation_results.json delta_analysis.delta_a"
+    },
+    {
+      "claim_id": "C05",
+      "claim": "tenacious_method_v3 exceeds published tau2-bench reference by +14.67pp",
+      "value": "+14.67pp",
+      "source_type": "derived",
+      "source": "0.5667 - 0.42 = 0.1467",
+      "trace_id": null,
+      "file_ref": "eval/ablation_results.json",
+      "notes": "Delta C, informational only"
+    },
+    {
+      "claim_id": "C06",
+      "claim": "Outreach pipeline p50 latency: 5.68s",
+      "value": "5.68s",
+      "source_type": "trace",
+      "source": "Langfuse cloud.langfuse.com, tenacious-ce project, April 24 2026, 27 production traces",
+      "trace_id": "langfuse-p50-2026-04-24",
+      "file_ref": "eval/trace_log.jsonl",
+      "notes": "p50 across 27 synthetic prospect runs on Render deployment"
+    },
+    {
+      "claim_id": "C07",
+      "claim": "Outreach pipeline p95 latency: 8.41s",
+      "value": "8.41s",
+      "source_type": "trace",
+      "source": "Langfuse cloud.langfuse.com, tenacious-ce project, April 24 2026, 27 production traces",
+      "trace_id": "langfuse-p95-2026-04-24",
+      "file_ref": "eval/trace_log.jsonl",
+      "notes": "p95 across 27 synthetic prospect runs on Render deployment. Includes Render free-tier variability."
+    },
+    {
+      "claim_id": "C08",
+      "claim": "B2B outbound cold-email reply rate (baseline): 1–3%",
+      "value": "1-3%",
+      "source_type": "published",
+      "source": "LeadIQ 2026 / Apollo benchmarks",
+      "trace_id": null,
+      "file_ref": "seed/baseline_numbers.md",
+      "notes": "Generic cold outreach without signal grounding"
+    },
+    {
+      "claim_id": "C09",
+      "claim": "Signal-grounded outbound reply rate (top-quartile): 7–12%",
+      "value": "7-12%",
+      "source_type": "published",
+      "source": "Clay, Smartlead case studies 2025",
+      "trace_id": null,
+      "file_ref": "seed/baseline_numbers.md",
+      "notes": "Signal-grounded outreach with verified public data"
+    },
+    {
+      "claim_id": "C10",
+      "claim": "Stalled-thread rate, current Tenacious manual process: 30–40%",
+      "value": "30-40%",
+      "source_type": "tenacious_internal",
+      "source": "Tenacious executive interview (CFO), challenge brief Week 10",
+      "trace_id": null,
+      "file_ref": "seed/baseline_numbers.md",
+      "notes": "CFO estimate: 30–40% of qualified conversations stall in first 2 weeks"
+    },
+    {
+      "claim_id": "C11",
+      "claim": "Average engagement ACV, talent outsourcing: $240K–$720K",
+      "value": "$240,000-$720,000",
+      "source_type": "tenacious_internal",
+      "source": "Tenacious internal, weighted by segment, revised Feb 2026",
+      "trace_id": null,
+      "file_ref": "seed/baseline_numbers.md",
+      "notes": "Used in business-cost derivation for brand-damage calculations"
+    },
+    {
+      "claim_id": "C12",
+      "claim": "Average engagement ACV, project consulting: $80K–$300K",
+      "value": "$80,000-$300,000",
+      "source_type": "tenacious_internal",
+      "source": "Tenacious internal, last 8 deals",
+      "trace_id": null,
+      "file_ref": "seed/baseline_numbers.md",
+      "notes": "Project-based engagements, Segment 4"
+    },
+    {
+      "claim_id": "C13",
+      "claim": "Discovery-call-to-proposal conversion: 35–50%",
+      "value": "35-50%",
+      "source_type": "tenacious_internal",
+      "source": "Tenacious internal, last 4 quarters",
+      "trace_id": null,
+      "file_ref": "seed/baseline_numbers.md",
+      "notes": "Used in annualized dollar impact calculation"
+    },
+    {
+      "claim_id": "C14",
+      "claim": "Proposal-to-close conversion: 25–40%",
+      "value": "25-40%",
+      "source_type": "tenacious_internal",
+      "source": "Tenacious internal, last 4 quarters",
+      "trace_id": null,
+      "file_ref": "seed/baseline_numbers.md",
+      "notes": "Used in annualized dollar impact calculation"
+    },
+    {
+      "claim_id": "C15",
+      "claim": "Total engineers on bench: 36",
+      "value": "36",
+      "source_type": "tenacious_internal",
+      "source": "seed/bench_summary.json, updated start of challenge week",
+      "trace_id": null,
+      "file_ref": "seed/bench_summary.json",
+      "notes": "Sum across all stack categories in bench_summary.json"
+    },
+    {
+      "claim_id": "C16",
+      "claim": "Python engineers available: 7 (including 1 senior)",
+      "value": "7",
+      "source_type": "tenacious_internal",
+      "source": "seed/bench_summary.json",
+      "trace_id": null,
+      "file_ref": "seed/bench_summary.json",
+      "notes": "python_backend section of bench_summary.json"
+    },
+    {
+      "claim_id": "C17",
+      "claim": "Time to deploy: 7 days for Python, 14 days for Go",
+      "value": "7-14 days",
+      "source_type": "tenacious_internal",
+      "source": "seed/bench_summary.json — time_to_deploy field",
+      "trace_id": null,
+      "file_ref": "seed/bench_summary.json",
+      "notes": "Standard onboarding: NDA, security policy, laptop provisioning"
+    },
+    {
+      "claim_id": "C18",
+      "claim": "voice agent conversational pass@1 ceiling: ~42%",
+      "value": "~42%",
+      "source_type": "published",
+      "source": "tau2-bench leaderboard, Feb 2026 (sierra-research/tau2-bench)",
+      "trace_id": null,
+      "file_ref": "eval/score_log.json",
+      "notes": "Published reference for GPT-5 class model on retail domain"
+    },
+    {
+      "claim_id": "C19",
+      "claim": "tenacious_method_v1 pass@1: 10%, CI [3.46%, 25.62%]",
+      "value": "10%",
+      "source_type": "trace",
+      "source": "eval/score_log.json — run_id d7ba49bc, tag tenacious_method",
+      "trace_id": "d7ba49bc",
+      "file_ref": "eval/score_log.json, eval/tau2_raw_tenacious_method.json",
+      "notes": "DeepSeek V3 model, 1 trial x 30 tasks"
+    },
+    {
+      "claim_id": "C20",
+      "claim": "tenacious_method_v2 pass@1: 16.67%, CI [7.34%, 33.56%]",
+      "value": "16.67%",
+      "source_type": "trace",
+      "source": "eval/score_log.json — run_id b1c7f59e, tag tenacious_method_v2",
+      "trace_id": "b1c7f59e",
+      "file_ref": "eval/score_log.json, eval/tau2_raw_tenacious_method_v2.json",
+      "notes": "DeepSeek V3 model + objection handling, 1 trial x 30 tasks"
+    },
+    {
+      "claim_id": "C21",
+      "claim": "Annualized dollar impact, one-segment pilot (Segment 1 only)",
+      "value": "See memo.pdf page 1",
+      "source_type": "derived",
+      "source": "Derived from C08, C09, C11, C13, C14. Formula: weekly_leads x reply_rate x discovery_rate x proposal_rate x close_rate x ACV x 52",
+      "trace_id": null,
+      "file_ref": "eval/ablation_results.json",
+      "notes": "Conservative scenario: 500 emails/week, 7% reply, 35% discovery, 25% close, $360K ACV (midpoint)"
+    },
+    {
+      "claim_id": "C22",
+      "claim": "Wrong-signal email brand damage estimate: 5% of outreach",
+      "value": "5%",
+      "source_type": "derived",
+      "source": "Estimated from probe analysis: Probe 26 false-positive rate ~8%, Probe 5 rate ~30%, effective overlap ~5% post-fix",
+      "trace_id": null,
+      "file_ref": "probes/probe_library.md, probes/target_failure_mode.md",
+      "notes": "Conservative post-fix estimate. Pre-fix estimate was ~20-30%."
+    },
+    {
+      "claim_id": "C23",
+      "claim": "Automated probe pass rate: 100% (10/10)",
+      "value": "10/10",
+      "source_type": "trace",
+      "source": "probes/probe_results.json — fields: passed=10, total_probes=30, manual=20",
+      "trace_id": null,
+      "file_ref": "probes/probe_results.json",
+      "notes": "10 probes automated, all pass. 20 probes are manual (documented in probe_library.md)."
+    }
+  ]
+}
