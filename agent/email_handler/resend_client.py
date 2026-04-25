@@ -1,3 +1,4 @@
+import re
 """
 email_handler/resend_client.py
 Resend email integration for Tenacious Conversion Engine.
