@@ -26,11 +26,20 @@ from enrichment.competitor_gap_brief import build_competitor_gap_brief, save_bri
 from agent_core.icp_classifier import classify
 from agent_core.outreach_composer import compose_outreach_email
 from agent_core.conversation_manager import handle_reply, get_state, save_state
-from email_handler.resend_client import (
-    send_outreach_email,
-    verify_webhook_signature,
-    parse_webhook_event,
-)
+# Use MailerSend for inbound if API key is set, Resend for outbound
+import os as _os
+if _os.getenv("MAILERSEND_API_KEY"):
+    from email_handler.mailersend_client import (
+        verify_webhook_signature,
+        parse_webhook_event,
+    )
+else:
+    from email_handler.resend_client import (
+        verify_webhook_signature,
+        parse_webhook_event,
+    )
+# Outbound always uses Resend
+from email_handler.resend_client import send_outreach_email
 from sms_handler.at_client import send_sms, parse_inbound
 from crm.hubspot_mcp import upsert_contact, log_email_sent, log_sms_event, log_booking
 from observability.langfuse_client import Tracer
@@ -208,7 +217,7 @@ async def email_reply_webhook(request: Request):
     - other events                   → ignore
     """
     body = await request.body()
-    sig = request.headers.get("svix-signature", "")
+    sig = request.headers.get("svix-signature", "") or request.headers.get("x-mailersend-signature", "")
 
     # Validate webhook signature
     if not verify_webhook_signature(body, sig):
@@ -352,7 +361,7 @@ async def sms_inbound_webhook(request: Request):
             trace_id=t.trace_id,
         )
 
-        # Send SMS reply (max 459 chars for Africa's Talking)
+        # Send SMS reply
         try:
             send_sms(
                 to_number=inbound["from_number"],
