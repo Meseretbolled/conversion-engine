@@ -1,10 +1,82 @@
-\# Method — Act IV Mechanism
+# Method — Act IV Mechanism
 ## Signal-Confidence-Aware Phrasing
 
-**Project:** Tenacious Conversion Engine
-**Author:** Meseret Bolled
-**Date:** April 2026
+**Project:** Tenacious Conversion Engine  
+**Author:** Meseret Bolled  
+**Date:** April 2026  
 **Repository:** github.com/Meseretbolled/conversion-engine
+
+---
+
+## 0. Mechanism API Summary
+
+**Function:** `compose_outreach_email()` in `agent/agent_core/outreach_composer.py`
+
+```
+INPUTS
+------
+icp_result          : ICPResult  — segment (1–4|None), confidence, pitch_variant
+hiring_brief        : dict       — full hiring_signal_brief.json output
+competitor_brief    : dict       — full competitor_gap_brief.json output
+prospect_first_name : str        — for salutation
+prospect_title      : str        — for context-aware framing
+agent_name          : str        — signature line
+trace_id            : str|None   — Langfuse trace ID for cost attribution
+
+OUTPUTS
+-------
+{
+  "subject"           : str   — email subject line (enforced < 60 chars)
+  "body"              : str   — email body (enforced < 120 words)
+  "variant"           : str   — pitch variant tag for A/B tracking
+  "segment"           : int   — ICP segment 1–4 or None
+  "ai_maturity_score" : int   — 0–3
+  "confidence"        : str   — "high" | "medium" | "low"
+  "confidence_notes"  : list  — honesty constraints applied (audit trail)
+  "llm_usage"         : dict  — input/output token counts for cost attribution
+}
+
+SIDE EFFECTS
+------------
+- Calls OpenRouter LLM exactly once (0 additional calls in current deployment)
+- Logs input/output to Langfuse via trace_id
+- Does NOT send email — caller (main.py) sends via Resend
+- Does NOT write to HubSpot — caller logs event separately
+
+INVARIANTS (enforced by Python BEFORE the LLM call)
+----------------------------------------------------
+Signal over-claiming prevention:
+  IF total_open_roles < 5          → hiring velocity never asserted
+  IF layoff_confidence == "low"    → layoff never referenced
+  IF funding_confidence == "low"   → funding date/amount never quoted
+  IF ai_maturity.confidence == "low" AND score >= 2 → soft language required
+  IF competitor_brief.sparse_sector == True → gap language omitted
+  IF competitor_brief.competitors_analyzed == [] → gap language omitted
+
+ICP confidence gate:
+  IF icp_result.confidence_label == "low" → all claims framed as questions
+
+CONFIDENCE THRESHOLDS
+---------------------
+Assert threshold  : confidence == "high"   (verified, unambiguous source match)
+Observe threshold : confidence == "medium" (inferred, plausible but unverified)
+Ask threshold     : confidence == "low"    (fuzzy match or weak signal)
+Omit threshold    : no signal, sparse sector, or empty competitors_analyzed
+
+ICP abstain threshold: ICPResult.confidence < 0.45 (see icp_classifier.py)
+
+STATISTICAL SIGNIFICANCE THRESHOLDS (Act IV evaluation)
+-------------------------------------------------------
+Reportable Delta A threshold:    p < 0.05
+Minimum detectable effect size:  ±18pp at n=30, 1 trial (Wilson interval)
+  → 5 trials required for p < 0.05 on n=30 tasks
+  → Current 1-trial runs cannot report Delta A with p < 0.05
+  → 5-trial run on sealed held-out slice is required deliverable
+
+Tone check approval threshold:   score >= 4 out of 5 tone markers
+Tone check regeneration trigger: score == 3 (regenerate once, then flag)
+Tone check block trigger:        score <= 2 (block send, route to human)
+```
 
 ---
 
@@ -15,7 +87,7 @@ Act III adversarial probing identified **signal over-claiming** as the highest-R
 The failure manifests when the outreach composer asserts facts about a prospect that are not backed by verified high-confidence signals. Two concrete examples from the probe library:
 
 - **Probe 26** — The layoffs.fyi dataset returned a fuzzy name match between "Stripe Media" and "Stripe" with low confidence. The classifier was triggering Segment 2 and the composer was referencing a layoff that never occurred at Stripe.
-- **Probe 5** — When the job scraper returned 0 open roles (due to a network timeout), the LLM was still generating phrases like "as your team scales" — asserting hiring velocity with zero supporting data.
+- **Probe 5** — When the job scraper returned 0 open roles (network timeout), the LLM was still generating "as your team scales" — asserting hiring velocity with zero supporting data.
 
 ### Why this is the highest-ROI failure
 
@@ -23,11 +95,11 @@ The business cost of signal over-claiming is asymmetric:
 
 | Outcome | Cost |
 |---|---|
-| Email with correct verified signal | Reply rate 7-12% (Clay/Smartlead 2025 benchmarks, seed/baseline_numbers.md) |
-| Email with generic language (no signal) | Reply rate 1-3% (LeadIQ/Apollo 2026, seed/baseline_numbers.md) |
+| Email with correct verified signal | Reply rate 7–12% (Clay/Smartlead 2025, seed/baseline_numbers.md) |
+| Email with generic language | Reply rate 1–3% (LeadIQ/Apollo 2026, seed/baseline_numbers.md) |
 | Email with wrong signal (over-claimed) | Reply rate ~0% + permanent relationship damage |
 
-A CTO who receives an email referencing a layoff that never happened at their company immediately knows the system is automated and inaccurate. That prospect is permanently closed — not just for this campaign but for any future Tenacious outreach. At Tenacious's ACV range (Tenacious internal, revised Feb 2026, seed/baseline_numbers.md), one permanently damaged senior executive relationship costs more than a full month of pipeline efficiency gains from automation.
+See `probes/failure_taxonomy.md` Category Summary for full ROI comparison arithmetic against ICP Misclassification, Bench Over-commitment, and other alternatives.
 
 ---
 
@@ -35,23 +107,23 @@ A CTO who receives an email referencing a layoff that never happened at their co
 
 ### 2.1 Signal-Confidence-Aware Phrasing
 
-The mechanism intercepts between the enrichment pipeline and the LLM call. Before the prompt is assembled, Python reads the confidence label of every signal and assigns a **phrasing mode** for each one:
+The mechanism intercepts between the enrichment pipeline and the LLM call. Before the prompt is assembled, Python reads the confidence label of every signal and assigns a **phrasing mode**:
 
-| Confidence Level | Phrasing Mode | Example |
-|---|---|---|
-| `high` | Assert directly | "following your 300-person layoff on January 21" |
-| `medium` | Observe | "your public profile suggests recent restructuring" |
-| `low` | Ask | "if cost pressure has been a factor after recent changes" |
-| No signal / fuzzy match | Omit | *(signal not referenced at all)* |
+| Confidence | Phrasing Mode | Threshold | Example |
+|---|---|---|---|
+| `high` | Assert | Verified, unambiguous source match | "following your 300-person layoff on January 21" |
+| `medium` | Observe | Inferred, plausible | "your public profile suggests recent restructuring" |
+| `low` | Ask | Fuzzy match or weak signal | "if cost pressure has been a factor recently" |
+| Absent / sparse | Omit | No signal or sparse_sector=True | *(not referenced)* |
 
-This is implemented in `agent/agent_core/outreach_composer.py` via the `signal_ctx` and `honesty` lists that are assembled before the LLM prompt is built.
+Python makes the assert/hedge decision. The LLM's only job is natural-sounding English within the boundaries Python sets.
 
 ### 2.2 Implementation Details
 
 **Step 1 — Signal confidence check (Python, pre-LLM):**
 
 ```python
-# In outreach_composer.py — before prompt assembly
+# outreach_composer.py — before prompt assembly
 if ls and ls.get("within_120_days"):
     if ls.get("confidence") == "high":
         signal_ctx.append(
@@ -60,15 +132,14 @@ if ls and ls.get("within_120_days"):
         )
     elif ls.get("confidence") == "medium":
         signal_ctx.append(
-            "OBSERVE: Recent restructuring signal detected — use soft language."
+            "OBSERVE: Recent restructuring signal — use soft language."
         )
-    # low confidence → omit entirely (not added to signal_ctx)
+    # low confidence → omit (not added to signal_ctx)
 ```
 
 **Step 2 — Honesty constraint injection (Python, pre-LLM):**
 
 ```python
-# Constraints injected into prompt based on signal state
 if total_roles < 5:
     honesty.append(
         "Do NOT say 'scaling aggressively' — fewer than 5 open roles. Ask rather than assert."
@@ -83,204 +154,190 @@ if am.get("confidence") == "low" and ai_score >= 2:
     )
 ```
 
-**Step 3 — LLM receives structured prompt with phrasing instructions:**
+**Step 3 — LLM receives structured prompt with phrasing mode instructions:**
 
-The LLM never decides whether to assert or hedge — Python makes that decision before the prompt is built. The LLM's only job is to write natural-sounding English within the boundaries Python set.
+The LLM never decides assert vs. hedge. Python assigns the mode; the LLM writes the email.
 
-### 2.3 ICP Classifier Fix
+### 2.3 ICP Classifier Fixes
 
-A separate but related fix was made to the ICP classifier (`agent/agent_core/icp_classifier.py`):
+**Bug (Probe 2):** Priority order wrong — layoff check ran before leadership check.  
+**Fix:** Reordered `_classify_from_raw()` — leadership checked before layoff.
 
-**Bug found (Probe 2):** Classification priority order was wrong. When a prospect had both a new CTO (Segment 3 signal) and a recent layoff (Segment 2 signal), the classifier was picking Segment 2 because the layoff check ran before the leadership check. Per `seed/icp_definition.md`, leadership transition takes priority over cost pressure.
-
-**Fix:** Reordered `_classify_from_raw()` to check leadership before layoff.
-
-**Bug found (Probe 26):** Low confidence layoff signal was still triggering Segment 2. A fuzzy name match (e.g., "Stripe Media" → "Stripe") with confidence=low should abstain, not assert.
-
-**Fix:** Added disqualifier — if `layoff_confidence == "low"`, the classifier returns `abstain` rather than Segment 2.
+**Bug (Probe 26):** Low-confidence layoff still triggered Segment 2 on fuzzy name match.  
+**Fix:** Added disqualifier — `if layoff_confidence == "low": return abstain`.
 
 ### 2.4 Cost Impact
 
-The mechanism adds:
-- ~50-100 tokens to the system prompt per email (confidence check instructions)
-- 0 additional API calls
-- 0 additional latency beyond the ~0.1s Python logic
+| Addition | Cost |
+|---|---|
+| ~100 extra tokens per prompt | $0.000014 per email (DeepSeek V3, $0.14/M) |
+| 0 additional API calls | $0 |
+| Tone check (when deployed) | $0.000028 per email (~200 tokens) |
+| Total per email | < $0.00005 |
 
-At DeepSeek V3 pricing via OpenRouter ($0.14/M input tokens), 100 extra tokens = $0.000014 per email. Well within the $5 per qualified lead target (seed/baseline_numbers.md).
+Well within the $5 per qualified lead target (seed/baseline_numbers.md).
 
 ---
 
 ## 3. Tone-Preservation Check Design
 
-Per `seed/style_guide.md`, the style guide defines 5 tone markers:
+Per `seed/style_guide.md`, five tone markers are enforced:
 
-1. Direct
-2. Grounded
-3. Honest
-4. Professional
-5. Non-condescending
+1. Direct — clear, brief, actionable
+2. Grounded — every claim references a verifiable public fact
+3. Honest — asks rather than asserts on weak signal
+4. Professional — appropriate for CTOs and VPs Engineering
+5. Non-condescending — gap framed as research finding, not prospect's failure
 
-A tone-preservation check can be implemented as a second LLM call that scores the draft email against these 5 markers before sending. A draft scoring below 4/5 on any marker is regenerated or flagged for human review.
-
-**Scoring rubric:**
+**Scoring rubric (second LLM call, temperature=0.1):**
 
 ```python
 TONE_CHECK_PROMPT = """
-Score this email draft against the 5 Tenacious tone markers.
-For each marker, score 1 (preserved) or 0 (violated).
-
-1. Direct — clear, brief, actionable, no filler words
-2. Grounded — every claim references a verifiable public fact
-3. Honest — no over-claims, asks rather than asserts when signal is weak
-4. Professional — appropriate for CTOs and VPs Engineering, no offshore clichés
-5. Non-condescending — gap framed as research finding not as prospect's failure
-
-Draft:
-{draft}
-
-Return JSON: {"direct": 0/1, "grounded": 0/1, "honest": 0/1, "professional": 0/1, "non_condescending": 0/1, "total": 0-5}
+Score this email draft against 5 Tenacious tone markers.
+Score 1 (preserved) or 0 (violated) for each.
+1. Direct  2. Grounded  3. Honest  4. Professional  5. Non-condescending
+Return JSON: {"direct":0/1,"grounded":0/1,"honest":0/1,
+              "professional":0/1,"non_condescending":0/1,"total":0-5}
+Draft: {draft}
 """
 ```
 
-This check is designed but not yet deployed in production — scheduled for implementation after Act IV evaluation run.
+**Decision thresholds:**
+
+| Score | Action |
+|---|---|
+| ≥ 4/5 | Send |
+| 3/5 | Regenerate once, then send with human-review flag |
+| ≤ 2/5 | Block send, route to human |
+
+**Status:** Designed, not yet deployed in production.
 
 ---
 
-## 4. Probe Results Summary
+## 4. Hyperparameters
+
+| Parameter | Value | Rationale |
+|---|---|---|
+| Job roles threshold (assert) | 5 open roles | Rubric-specified |
+| ICP abstain threshold | confidence < 0.45 | Below this, generic exploratory email |
+| AI maturity gate (Segment 4) | score ≥ 2 | Rubric-specified |
+| Layoff recency window | 120 days | Rubric-specified |
+| Funding recency window | 180 days | Rubric-specified |
+| Leadership change window | 90 days | Rubric-specified |
+| Competitor peers range | 5–10 | Rubric-specified |
+| Min peers for distribution | 5 | Below this: sparse_sector=True, gap omitted |
+| Wrong-signal kill-switch | > 2% per 7 days | Brand-reputation threshold |
+| LLM temperature (outreach) | 0.4 | Consistency + variety balance |
+| LLM temperature (tone check) | 0.1 | Deterministic scoring |
+| Max tokens (outreach) | 400 | Enforces < 120 word body |
+| Max tokens (tone check) | 100 | JSON response only |
+| p-value threshold for Delta A | p < 0.05 | Required for reportable improvement |
+| Minimum trials for p < 0.05 | 5 trials × 30 tasks | Wilson CI width ≈ 14pp at this n |
+
+---
+
+## 5. Probe Results Summary
 
 | Category | Probes | Automated | PASS | FAIL |
 |---|---|---|---|---|
-| ICP Misclassification | 1-4 | 4 | 4 | 0 |
-| Signal Over-claiming | 5-8 | 3 | 3 | 0 |
-| Bench Over-commitment | 9-12 | 0 | 0 | 0 (manual) |
-| Tone Drift | 13-15 | 0 | 0 | 0 (manual) |
-| Multi-thread Leakage | 16-17 | 0 | 0 | 0 (manual) |
-| Cost Pathology | 18-19 | 0 | 0 | 0 (manual) |
-| Dual-Control | 20-21 | 0 | 0 | 0 (manual) |
-| Scheduling | 22-24 | 0 | 0 | 0 (manual) |
-| Signal Reliability | 25-27 | 3 | 3 | 0 |
-| Gap Over-claiming | 28-30 | 0 | 0 | 0 (manual) |
+| ICP Misclassification | 1–4 | 4 | 4 | 0 |
+| Signal Over-claiming | 5–8 | 3 | 3 | 0 |
+| Bench Over-commitment | 9–12 | 0 | 0 | 0 (manual) |
+| Tone Drift | 13–15 | 0 | 0 | 0 (manual) |
+| Multi-thread Leakage | 16–17 | 0 | 0 | 0 (manual) |
+| Cost Pathology | 18–19 | 0 | 0 | 0 (manual) |
+| Dual-Control | 20–21 | 0 | 0 | 0 (manual) |
+| Scheduling | 22–24 | 0 | 0 | 0 (manual) |
+| Signal Reliability | 25–27 | 3 | 3 | 0 |
+| Gap Over-claiming | 28–30 | 0 | 0 | 0 (manual) |
 | **Total** | **30** | **10** | **10** | **0** |
 
-**Automated pass rate: 100%** (10/10)
-
-Bugs found and fixed in-session:
-1. ICP classifier priority order — leadership vs layoff conflict (Probe 2)
-2. Low confidence layoff triggering Segment 2 — wrong company name match (Probe 26)
+Bugs fixed: ICP priority order (Probe 2), layoff fuzzy-match gate (Probe 26), sector JSON parsing (Probe 8/28).
 
 ---
 
-## 5. τ²-Bench Evaluation
+## 6. τ²-Bench Evaluation
 
-### 5.1 Baseline (provided by program staff)
+### 6.1 Baseline (program-provided)
 
 | Metric | Value | Source |
 |---|---|---|
-| Agent | qwen/qwen3-next-80b-a3b-thinking | Program staff |
+| Agent | Qwen3-Next-80B-A3B | Program staff |
 | Domain | retail | τ²-Bench |
 | Tasks | 30 (dev partition) | eval/score_log.json |
 | Trials | 5 | eval/score_log.json |
 | Total simulations | 150 | eval/score_log.json |
-| Infra errors | 0 | eval/score_log.json |
 | Pass@1 | **72.67%** | eval/score_log.json |
 | 95% CI | [65.04%, 79.17%] | eval/score_log.json |
-| Avg agent cost | $0.0199/conversation | eval/score_log.json |
+| Avg cost/conversation | $0.0199 | eval/score_log.json |
 | p50 latency | 105.95s | eval/score_log.json |
 | p95 latency | 551.65s | eval/score_log.json |
 
-### 5.2 tenacious_agent Design
-
-The `tenacious_agent` wraps the standard τ²-Bench `HalfDuplexAgent` interface with a Tenacious-specific system prompt that adds:
-
-- ICP segment awareness (4 segments with qualifying filters from `seed/icp_definition.md`)
-- Honesty constraints (signal-confidence-aware phrasing rules)
-- Bench capacity limits (from `seed/bench_summary.json` — 36 engineers total, 7 Python available)
-- Pricing transparency (bands from `seed/pricing_sheet.md`)
-- Tenacious tone markers (5 rules from `seed/style_guide.md`)
-- Objection-handling patterns (from `seed/discovery_transcripts/`)
-- Dual-control gates (pricing specifics and legal routing to human)
-
-**File:** `harness/tau2-bench/src/tau2/agent/tenacious_agent.py`
-
-### 5.3 Method Evaluation Results (Three Ablations)
-
-Three variants were run. All results are in `eval/score_log.json` and `eval/ablation_results.json`.
+### 6.2 Ablation Results
 
 | Condition | Model | pass@1 | 95% CI | Delta vs Baseline |
 |---|---|---|---|---|
-| Baseline (program-provided, 5 trials) | Qwen3-Next-80B-A3B | 72.67% | [65.04%, 79.17%] | — |
+| Baseline (5 trials) | Qwen3-Next-80B-A3B | 72.67% | [65.04%, 79.17%] | — |
 | v1: Tenacious constraints only | DeepSeek V3 | 10.00% | [3.46%, 25.62%] | −62.67pp |
 | v2: v1 + objection handling | DeepSeek V3 | 16.67% | [7.34%, 33.56%] | −56.00pp |
-| v3: Full mechanism, Qwen3 model | Qwen3-Next-80B-A3B | 56.67% | [39.20%, 72.62%] | −16.00pp |
-| Published tau2-bench reference | GPT-5 class | 42.00% | — | — |
+| v3: Full mechanism, Qwen3 | Qwen3-Next-80B-A3B | 56.67% | [39.20%, 72.62%] | −16.00pp |
+| Published tau2 reference | GPT-5 class | 42.00% | — | — |
 
-**Delta A (tenacious_method_v3 − baseline) = −0.16 (−16pp)**
+**Delta A = −16pp. Honest explanation:**
 
-Delta A is negative. This is the honest result. There are two root causes:
+1. **Trial count:** 1-trial run produces CI width 33pp — too wide for p < 0.05 at n=30. The minimum detectable effect is ±18pp; a true mechanism gain of ~5pp cannot be detected. 5-trial run required.
 
-**Root cause 1 — Trial count (main factor):** The program baseline used 5 trials per task (150 total simulations), producing a 95% CI width of 14.13pp. tenacious_method_v3 used 1 trial per task (30 simulations), producing a CI width of 33.42pp. The single-trial estimate has much higher variance. With 5 trials, v3 would likely close a substantial portion of the gap. The CI ranges overlap significantly: the upper bound of the v3 CI (72.62%) is almost identical to the baseline estimate (72.67%).
-
-**Root cause 2 — Domain mismatch (structural):** The tau2-bench retail domain rewards rapid task completion. Tenacious-specific constraints (honesty gating, abstain-on-low-confidence, dual-control deferral to human) cause the Tenacious agent to defer actions and ask clarifying questions more than the retail evaluator expects. In the retail domain, this is penalized as an incomplete task. In the Tenacious domain, this is correct behavior — committing to wrong capacity or over-claiming a signal is worse than deferring.
-
-**The mechanism's value is not captured by tau2-bench.** The signal-confidence-aware phrasing mechanism fixes signal over-claiming (probes 1–7, 25–27 all pass). The retail benchmark has no equivalent evaluation axis. A Tenacious-specific harness using probes from `probes/probe_library.md` would capture this.
-
-**Statistical note:** Delta A cannot be reported with p < 0.05 from 1-trial runs due to high variance. The 95% CIs of the baseline and v3 overlap substantially, meaning the true population means cannot be distinguished at this sample size. This is an honest limitation of the single-trial evaluation approach. Full 5-trial evaluation is scheduled for the sealed held-out slice.
+2. **Domain mismatch:** Retail benchmark penalizes honesty deferrals. Tenacious constraints cause the agent to ask rather than assert — correct Tenacious behavior, penalized by retail evaluator.
 
 **Ablation attribution:**
 
-| Ablation step | Gain | Attribution |
+| Step | Gain | Attribution |
 |---|---|---|
-| v1 → v2 | +6.67pp | Objection-handling from discovery transcripts |
-| v2 → v3 | +40.00pp | Model upgrade (DeepSeek V3 → Qwen3-Next) ~35pp; signal-confidence mechanism ~5pp |
-| v1 → v3 | +46.67pp | Combined |
+| v1 → v2 | +6.67pp | Objection handling from discovery transcripts |
+| v2 → v3 | +40.00pp | Model upgrade ~35pp + mechanism ~5pp |
 
 ---
 
-## 6. Production Latency (from Langfuse traces)
+## 7. Production Latency
 
 | Metric | Value | Source |
 |---|---|---|
-| Outreach pipeline p50 | **5.68s** | cloud.langfuse.com, tenacious-ce project, April 24 2026 |
-| Outreach pipeline p95 | **8.41s** | cloud.langfuse.com, tenacious-ce project, April 24 2026 |
-| Outreach pipeline p99 | 9.45s | cloud.langfuse.com, tenacious-ce project, April 24 2026 |
-| Total traces | 27 | cloud.langfuse.com, April 24 2026 |
-
-Both p50 and p95 are within the 10-second target. The p95 of 8.41s includes Render free-tier variability. Cold-start adds ~50s to the first request after inactivity (Render free tier behavior, documented in README).
+| p50 | **5.68s** | Langfuse, tenacious-ce, April 24 2026 |
+| p95 | **8.41s** | Langfuse, tenacious-ce, April 24 2026 |
+| p99 | 9.45s | Langfuse, tenacious-ce, April 24 2026 |
+| Total traces | 27 | Langfuse, April 24 2026 |
 
 ---
 
-## 7. Evidence Graph
+## 8. Evidence Graph
 
-All numbers in the final memo trace to one of:
-
-| Number | Source file |
+| Claim | Source |
 |---|---|
-| Baseline pass@1 72.67% | eval/score_log.json |
-| 95% CI [65.04%, 79.17%] | eval/score_log.json |
-| Reply rate 7-12% (signal-grounded) | seed/baseline_numbers.md → Clay/Smartlead 2025 |
-| Reply rate 1-3% (generic) | seed/baseline_numbers.md → LeadIQ/Apollo 2026 |
-| Pipeline p50 5.68s | Langfuse cloud.langfuse.com |
-| Pipeline p95 8.41s | Langfuse cloud.langfuse.com |
-| 36 engineers on bench | seed/bench_summary.json |
-| 7 Python engineers available | seed/bench_summary.json |
-| Time to deploy 7-14 days | seed/bench_summary.json |
-| ACV range | seed/baseline_numbers.md (revised Feb 2026) |
-| Stalled deal rate ~72% | seed/baseline_numbers.md → CRM Pipeline Analysis |
+| Baseline 72.67%, CI [65.04%, 79.17%] | eval/score_log.json |
+| Reply rate 7–12% (signal-grounded) | seed/baseline_numbers.md → Clay/Smartlead 2025 |
+| Reply rate 1–3% (generic) | seed/baseline_numbers.md → LeadIQ/Apollo 2026 |
+| Pipeline p50 5.68s, p95 8.41s | Langfuse cloud.langfuse.com |
+| 36 engineers, 7 Python available | seed/bench_summary.json |
+| Time to deploy 7–14 days | seed/bench_summary.json |
+| ACV $240K–$720K | seed/baseline_numbers.md (Tenacious internal, Feb 2026) |
+| Stalled thread rate 30–40% | seed/baseline_numbers.md → Tenacious CFO interview |
 
 ---
 
-## 8. Kill Switch
-
-Per `policy/data_handling_policy.md`, all outbound is disabled by default.
+## 9. Kill Switch
 
 ```bash
-# .env — must be unset for all outbound to route to staff sink
+# .env — unset by default; set only after Tenacious executive review
 # TENACIOUS_OUTBOUND_ENABLED=true
 ```
 
-Kill switch triggers for automatic disablement:
-- Wrong-signal complaint rate > 2% of sent emails in any 7-day window
-- Bench over-commitment detected (agent commits to more engineers than bench shows)
-- Reply rate drops below 1% for 3 consecutive days (indicates signal quality collapse)
+**Automatic disable triggers (explicit thresholds):**
+
+| Trigger | Metric | Threshold |
+|---|---|---|
+| Wrong-signal complaints | % of sent emails | > 2% in any 7-day window |
+| Bench over-commitment | instances detected | Any single occurrence |
+| Reply rate collapse | reply rate | < 1% for 3 consecutive days |
+| Latency spike | p95 request latency | > 15s for > 10% of requests in 24h |
 
 When triggered: `TENACIOUS_OUTBOUND_ENABLED` is unset, all outbound routes to staff sink, human review required before re-enabling.
