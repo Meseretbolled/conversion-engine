@@ -50,7 +50,7 @@ def send_outreach_email(
         },
         "tags": [
             {"name": "prospect_id", "value": prospect_id},
-            *([{"name": k, "value": str(v)} for k, v in (tags or {}).items()]),
+            *([{"name": k, "value": re.sub(r"[^a-zA-Z0-9_-]", "_", str(v))} for k, v in (tags or {}).items()]),
         ],
     }
     try:
