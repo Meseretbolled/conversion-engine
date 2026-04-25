@@ -1,13 +1,5 @@
-"""
-agent/agent_core/outreach_composer.py
-Composes signal-grounded cold outreach emails using seed materials.
+import os
 
-Seed files loaded at import time:
-  seed/style_guide.md     — Tenacious tone markers (5 rules)
-  seed/icp_definition.md  — ICP segment definitions
-  seed/pricing_sheet.md   — Pricing bands per segment
-  seed/email_sequences/cold.md — Cold email sequence templates
-"""
 import json
 import pathlib
 from agent_core.llm_client import chat
@@ -23,6 +15,7 @@ def _load_seed(filename: str) -> str:
     return ""
 
 STYLE_GUIDE    = _load_seed("style_guide.md")
+CALCOM_BOOKING_URL = os.getenv("CALCOM_BOOKING_URL", "https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call")
 ICP_DEFINITION = _load_seed("icp_definition.md")
 COLD_TEMPLATE  = _load_seed("email_sequences/cold.md")
 PRICING_SHEET  = _load_seed("pricing_sheet.md")
@@ -34,7 +27,7 @@ Tenacious tone: direct, confident, not pushy. Every claim references a verifiabl
 Never say exciting opportunity, leverage, synergies, world-class, top talent, rockstar, ninja.
 Never start with I hope this email finds you well.
 Keep under 120 words. Subject line under 60 characters.
-One CTA: a specific 30-minute discovery call.
+One CTA: a specific 30-minute discovery call. Include this exact booking link: {CALCOM_BOOKING_URL}
 Signature: [First Name] / Research Partner / Tenacious Intelligence Corporation / gettenacious.com
 """
 
@@ -162,7 +155,7 @@ SEGMENT INSTRUCTION:
 {seg_prompt}
 
 STYLE GUIDE:
-{STYLE_GUIDE[:1500]}
+{STYLE_GUIDE[:1500].replace('{CALCOM_BOOKING_URL}', CALCOM_BOOKING_URL)}
 
 PROSPECT:
 - Name: {prospect_first_name}{f' ({prospect_title})' if prospect_title else ''}
