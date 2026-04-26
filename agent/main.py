@@ -59,6 +59,51 @@ PROSPECT_REGISTRY: dict[str, dict] = {}
 
 # ── Health check ─────────────────────────────────────────────────────────────
 
+
+import csv as _csv
+
+@app.get("/api/companies")
+async def get_companies(search: str = "", limit: int = 50):
+    """Return companies from Crunchbase CSV for the pipeline UI."""
+    try:
+        import sys, os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+        from enrichment.crunchbase import _load_df
+        df = _load_df()
+        if search:
+            mask = df["name"].str.lower().str.contains(search.lower(), na=False)
+            df = df[mask]
+        companies = []
+        for _, row in df.head(limit).iterrows():
+            companies.append({
+                "name": str(row.get("name", "")),
+                "id": str(row.get("uuid", row.get("id", ""))),
+                "website": str(row.get("website", row.get("homepage_url", ""))),
+                "country": str(row.get("country_code", "")),
+                "employees": str(row.get("num_employees", "")),
+                "industries": str(row.get("industries", "")),
+            })
+        return {"companies": companies, "total": len(companies)}
+    except Exception as e:
+        return {"companies": [], "error": str(e)}
+
+@app.get("/api/prospects")
+async def get_prospects():
+    """Return all active prospects in the registry."""
+    return {
+        "prospects": [
+            {"id": pid, **{k: v for k, v in data.items() if k not in ["hiring_brief", "competitor_brief"]}}
+            for pid, data in PROSPECT_REGISTRY.items()
+        ]
+    }
+
+@app.get("/api/prospect/{prospect_id}")
+async def get_prospect(prospect_id: str):
+    """Return full prospect data including briefs."""
+    if prospect_id not in PROSPECT_REGISTRY:
+        return {"error": "not found"}
+    return PROSPECT_REGISTRY[prospect_id]
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
@@ -185,6 +230,7 @@ async def _run_outreach_pipeline(prospect_id: str, req: ProspectRequest):
         # Register prospect for reply handling
         PROSPECT_REGISTRY[prospect_id] = {
             "email": req.prospect_email,
+            "name": req.prospect_first_name,
             "company": req.company_name,
             "contact_id": contact_id,
             "phone": req.prospect_phone,
@@ -277,9 +323,41 @@ async def email_reply_webhook(request: Request):
                 log_sms_event(prospect["contact_id"], "inbound", reply_text)
             except Exception as e:
                 logger.error(f"HubSpot log failed: {e}")
+        # Send the agent response back as email
+        response_text = result.get("response_text", "")
+        if response_text and prospect.get("email"):
+            try:
+                from email_handler.resend_client import send_outreach_email
+                subj = email_data.get("subject", "Re: Tenacious outreach")
+                if not subj.startswith("Re:"):
+                    subj = f"Re: {subj}"
+                reply_result = send_outreach_email(
+                    to_email=prospect["email"],
+                    subject=subj,
+                    body=response_text,
+                    prospect_id=prospect_id,
+                )
+                logger.info(f"[{prospect_id}] Reply email sent: {reply_result.get('message_id')}")
+                # Update HubSpot with reply
+                if prospect.get("contact_id"):
+                    try:
+                        from crm.hubspot_mcp import log_email_sent
+                        log_email_sent(
+                            contact_id=prospect["contact_id"],
+                            subject=subj,
+                            body=response_text,
+                            message_id=reply_result.get("message_id", ""),
+                            segment=prospect.get("icp", {}).get("segment", 0),
+                            pitch_variant="reply",
+                        )
+                    except Exception as he:
+                        logger.warning(f"HubSpot reply log failed: {he}")
+            except Exception as se:
+                logger.error(f"[{prospect_id}] Reply send failed: {se}")
+
         t.set_output(result)
         t.__exit__(None, None, None)
-        return {"status": "handled", "action": result.get("action")}
+        return {"status": "handled", "action": result.get("action"), "response_sent": bool(response_text)}
     except Exception as e:
         logger.error(f"Email reply handling failed for {prospect_id}: {e}")
         return {"status": "error", "detail": str(e)}

@@ -4,6 +4,8 @@ from typing import Optional
 from hubspot import HubSpot
 from hubspot.crm.contacts import SimplePublicObjectInputForCreate
 from hubspot.crm.contacts.exceptions import ApiException
+from hubspot.crm.companies import SimplePublicObjectInputForCreate as CompanyInput
+from hubspot.crm.companies.exceptions import ApiException as CompanyApiException
 
 _client: Optional[HubSpot] = None
 
@@ -39,6 +41,30 @@ def upsert_contact(email, first_name="", last_name="", company="", phone="",
         return {"id":result.id,"action":"created","email":email}
     except ApiException as e:
         return {"error":str(e),"email":email}
+
+def upsert_company(name, domain="", industry="", description="", country="", city="",
+                   employee_count="", total_funding_usd="", founded_year="", crunchbase_id=""):
+    client = get_client()
+    properties = {k:v for k,v in {
+        "name":name,"domain":domain,"industry":industry,"description":description,
+        "country":country,"city":city,"numberofemployees":employee_count,
+        "total_revenue":total_funding_usd,"founded_year":founded_year,
+        "crunchbase_id":crunchbase_id,
+        "last_enriched_at":datetime.utcnow().isoformat(),
+    }.items() if v}
+    try:
+        search = client.crm.companies.search_api.do_search(public_object_search_request={
+            "filters":[{"propertyName":"name","operator":"EQ","value":name}],"limit":1})
+        if search.results:
+            cid = search.results[0].id
+            client.crm.companies.basic_api.update(company_id=cid,
+                simple_public_object_input={"properties":properties})
+            return {"id":cid,"action":"updated","name":name}
+        result = client.crm.companies.basic_api.create(
+            simple_public_object_input_for_create=CompanyInput(properties=properties))
+        return {"id":result.id,"action":"created","name":name}
+    except CompanyApiException as e:
+        return {"error":str(e),"name":name}
 
 def log_email_sent(contact_id, subject, body, message_id, segment, pitch_variant):
     client = get_client()

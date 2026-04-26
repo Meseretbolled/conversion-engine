@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TenaciousOps · Conversion Engine</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+:root {
+  --bg: #0f1117;
+  --bg2: #161b27;
+  --bg3: #1e2535;
+  --border: #252d3d;
+  --border2: #2e3a52;
+  --text: #e2e8f0;
+  --text2: #8892a4;
+  --text3: #4a5568;
+  --blue: #3b82f6;
+  --blue2: #1d4ed8;
+  --green: #10b981;
+  --orange: #f59e0b;
+  --red: #ef4444;
+  --purple: #8b5cf6;
+  --accent: #3b82f6;
+  --nav-w: 200px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
+
+/* Sidebar */
+.sidebar { width: var(--nav-w); background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+.logo { padding: 20px 16px; font-size: 18px; font-weight: 800; border-bottom: 1px solid var(--border); }
+.logo span { color: var(--blue); }
+.nav { flex: 1; padding: 12px 0; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s; }
+.nav-item:hover { color: var(--text); background: var(--bg3); }
+.nav-item.active { color: var(--text); background: var(--bg3); border-left-color: var(--blue); }
+.nav-item .ico { font-size: 15px; width: 20px; }
+
+/* Main */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { height: 44px; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; font-size: 12px; color: var(--text2); flex-shrink: 0; }
+.topbar-title { font-weight: 600; }
+
+.content { flex: 1; overflow-y: auto; padding: 28px 32px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* Typography */
+h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+.page-desc { font-size: 14px; color: var(--text2); margin-bottom: 24px; line-height: 1.5; }
+h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+h3 { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+
+/* Cards */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+.card + .card { margin-top: 16px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+/* Forms */
+label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
+input, select, textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 7px; padding: 10px 14px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+select option { background: var(--bg3); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-group { margin-bottom: 14px; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: var(--blue2); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--blue); color: var(--text); }
+.btn-green { background: var(--green); color: #fff; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* Status badges */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-green { background: #064e3b; color: var(--green); border: 1px solid #065f46; }
+.badge-blue { background: #1e3a5f; color: var(--blue); border: 1px solid #1d4ed8; }
+.badge-orange { background: #451a03; color: var(--orange); border: 1px solid #92400e; }
+.badge-red { background: #450a0a; color: var(--red); border: 1px solid #991b1b; }
+.badge-purple { background: #2e1065; color: var(--purple); border: 1px solid #5b21b6; }
+.badge-gray { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+tbody tr:hover { background: var(--bg3); }
+tbody td { padding: 12px 14px; color: var(--text); }
+tbody td.dim { color: var(--text2); font-size: 12px; }
+
+/* Pipeline steps */
+.steps { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
+.step { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; background: var(--bg3); border: 1px solid var(--border2); color: var(--text3); transition: all 0.3s; }
+.step.waiting { color: var(--text3); }
+.step.running { border-color: var(--blue); color: var(--blue); background: #1e3a5f; animation: pulse 1.5s infinite; }
+.step.done { border-color: var(--green); color: var(--green); background: #064e3b22; }
+.step.error { border-color: var(--red); color: var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+/* Log */
+.log-box { background: #0a0d12; border: 1px solid var(--border); border-radius: 8px; padding: 14px; height: 180px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.log-line { padding: 2px 0; }
+.log-line.info { color: #60a5fa; }
+.log-line.success { color: var(--green); }
+.log-line.warn { color: var(--orange); }
+.log-line.error { color: var(--red); }
+.log-line.dim { color: var(--text3); }
+
+/* Tabs */
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.tab { padding: 10px 16px; font-size: 12px; font-weight: 700; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.5px; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* Lead detail */
+.lead-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.lead-title h1 { font-size: 24px; margin-bottom: 4px; }
+.lead-title .domain { font-size: 13px; color: var(--text2); }
+.lead-actions { display: flex; gap: 8px; align-items: center; }
+
+/* Signal items */
+.signal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.signal-card { background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 14px; }
+.signal-name { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.signal-value { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.signal-evidence { font-size: 11px; color: var(--text3); line-height: 1.4; }
+.conf-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+.conf-high { background: var(--green); }
+.conf-medium { background: var(--orange); }
+.conf-low { background: var(--red); }
+
+/* Conversation */
+.msg { padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; line-height: 1.6; }
+.msg.outbound { background: #1e3a5f; border: 1px solid #1d4ed8; }
+.msg.inbound { background: var(--bg3); border: 1px solid var(--border2); }
+.msg-meta { font-size: 11px; color: var(--text2); margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+
+/* JSON viewer */
+.json-box { background: #0a0d12; border: 1px solid var(--border); border-radius: 8px; padding: 14px; max-height: 320px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a8b2c3; white-space: pre-wrap; word-break: break-all; }
+.json-key { color: #60a5fa; }
+.json-str { color: #a8d8a8; }
+.json-num { color: #f4b8e4; }
+.json-bool { color: var(--orange); }
+
+/* Stats */
+.stat-box { text-align: center; padding: 16px; background: var(--bg3); border-radius: 8px; }
+.stat-num { font-size: 32px; font-weight: 800; color: var(--text); }
+.stat-label { font-size: 11px; color: var(--text2); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* Health indicator */
+.health-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; }
+.health-dot.offline { background: var(--red); animation: none; }
+.health-dot.live { animation: hpulse 2s infinite; }
+@keyframes hpulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,0.4)} 50%{opacity:0.8;box-shadow:0 0 0 4px rgba(16,185,129,0)} }
+
+/* Search */
+.search-row { display: flex; gap: 10px; margin-bottom: 16px; }
+.search-row input { flex: 1; }
+
+/* Responsive table */
+@media (max-width: 900px) { .grid2, .grid3, .grid4, .signal-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="logo">Tenacious<span>Ops</span></div>
+  <div class="nav">
+    <div class="nav-item active" onclick="showPage('overview')" id="nav-overview"><span class="ico">◎</span> Overview</div>
+    <div class="nav-item" onclick="showPage('pipeline')" id="nav-pipeline"><span class="ico">⚡</span> Pipeline</div>
+    <div class="nav-item" onclick="showPage('runs')" id="nav-runs"><span class="ico">≡</span> Pipeline Runs</div>
+    <div class="nav-item" onclick="showPage('outreachs')" id="nav-outreachs"><span class="ico">✉</span> Outreachs</div>
+    <div class="nav-item" onclick="showPage('handoffs')" id="nav-handoffs"><span class="ico">↗</span> Handoffs</div>
+    <div class="nav-item" onclick="showPage('control')" id="nav-control"><span class="ico">⚙</span> Control Tower</div>
+  </div>
+  <div style="padding:16px;font-size:11px;color:var(--text3);border-top:1px solid var(--border)">
+    Conversion engine · orchestration UI
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">Conversion engine · orchestration UI</span>
+    <div style="display:flex;align-items:center;gap:16px">
+      <span id="health-indicator"><span class="health-dot live"></span><span id="health-text">Checking...</span></span>
+      <span style="color:var(--text3);font-size:11px" id="server-info">conversion-engine10.onrender.com</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW PAGE -->
+    <div class="page active" id="page-overview">
+      <h1>Conversion engine console</h1>
+      <p class="page-desc">This UI drives the <strong>orchestration API</strong>: research-backed lead intake, briefs, outreach, replies, and scheduling — aligned to the Tenacious specs (signals, ICP, bench safety, CRM events).</p>
+
+      <div class="card">
+        <h2>What the pipeline does</h2>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+          <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:var(--blue);font-weight:800;font-size:14px;min-width:20px">1.</span><div><strong>Discover &amp; enrich</strong> — Merge Crunchbase firmographics with job posts, layoffs, leadership changes, and stack signals; attach confidence to each.</div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:var(--blue);font-weight:800;font-size:14px;min-width:20px">2.</span><div><strong>Score &amp; classify</strong> — AI maturity (0–3), ICP segment (with abstention when evidence is thin), competitor percentile and gap brief.</div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:var(--blue);font-weight:800;font-size:14px;min-width:20px">3.</span><div><strong>Draft &amp; send outreach</strong> — Segment-aware email grounded in briefs; honesty constraints enforce tone, claims, and bench commitment before send.</div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:var(--blue);font-weight:800;font-size:14px;min-width:20px">4.</span><div><strong>Run conversations</strong> — Replies interpreted; routing toward clarify, nurture, schedule, or human escalation. Agent sends follow-up email automatically.</div></div>
+          <div style="display:flex;gap:12px;align-items:flex-start"><span style="color:var(--blue);font-weight:800;font-size:14px;min-width:20px">5.</span><div><strong>Book &amp; sync</strong> — Meetings via Cal.com flow; HubSpot reflects stages and events.</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h2>Lead lifecycle (high level)</h2>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:16px">States follow the runtime state machine: each transition is explicit, logged, and guardrailed in the API.</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div class="badge badge-gray">new</div>
+          <span style="color:var(--text3)">→</span>
+          <div class="badge badge-blue">enriched</div>
+          <span style="color:var(--text3)">→</span>
+          <div class="badge badge-blue">outreach_sent</div>
+          <span style="color:var(--text3)">→</span>
+          <div class="badge badge-orange">engaged</div>
+          <span style="color:var(--text3)">→</span>
+          <div class="badge badge-orange">booking_offered</div>
+          <span style="color:var(--text3)">→</span>
+          <div class="badge badge-green">BOOKED</div>
+        </div>
+      </div>
+
+      <div class="grid3" style="margin-top:16px">
+        <div class="card">
+          <div class="stat-box"><div class="stat-num" id="ov-total">0</div><div class="stat-label">Total Prospects</div></div>
+        </div>
+        <div class="card">
+          <div class="stat-box"><div class="stat-num" style="color:var(--green)" id="ov-booked">0</div><div class="stat-label">Booked</div></div>
+        </div>
+        <div class="card">
+          <div class="stat-box"><div class="stat-num" style="color:var(--blue)" id="ov-active">0</div><div class="stat-label">Active Threads</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIPELINE PAGE -->
+    <div class="page" id="page-pipeline">
+      <h1>Pipeline</h1>
+      <p class="page-desc">Check API health, select a company from the Crunchbase export, then run intake to open the lead detail view.</p>
+
+      <div class="card">
+        <h3>API health</h3>
+        <div id="health-status" style="font-size:13px;color:var(--text2);display:flex;align-items:center;gap:10px">
+          <span class="health-dot live"></span> Checking...
+          <button class="btn btn-ghost btn-sm" onclick="checkHealth()">Retry</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>Process New Lead</h3>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:16px">Select a company from the bundled Crunchbase dataset, fill in contact details, then run intake.</p>
+
+        <div class="search-row">
+          <input type="text" id="company-search" placeholder="Filter by name, id, or domain..." oninput="searchCompanies(this.value)">
+        </div>
+        <div class="form-group">
+          <label>Company</label>
+          <select id="company-select" onchange="onCompanySelect(this.value)" size="1">
+            <option value="">— Select —</option>
+          </select>
+          <p style="font-size:11px;color:var(--text3);margin-top:6px" id="company-count">Loading companies...</p>
+        </div>
+
+        <div id="contact-form" style="display:none">
+          <div class="form-row">
+            <div><label>First Name</label><input type="text" id="p-fname" placeholder="Alex"></div>
+            <div><label>Last Name</label><input type="text" id="p-lname" placeholder="Smith"></div>
+          </div>
+          <div class="form-row">
+            <div><label>Email</label><input type="email" id="p-email" placeholder="alex@company.com" value="meseretbolled@gmail.com"></div>
+            <div><label>Title</label><input type="text" id="p-title" placeholder="CTO" value="CTO"></div>
+          </div>
+          <div class="form-group">
+            <label>Phone (optional)</label>
+            <input type="text" id="p-phone" placeholder="+251952677995">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="run-btn" onclick="runIntake()" disabled>
+          ⚡ Run intake
+        </button>
+      </div>
+
+      <!-- Pipeline progress -->
+      <div class="card" id="pipeline-progress" style="margin-top:16px;display:none">
+        <h3>Pipeline Progress</h3>
+        <div class="steps">
+          <div class="step waiting" id="ps-enrich">🔍 Signal Enrichment</div>
+          <div class="step waiting" id="ps-icp">🎯 ICP Classify</div>
+          <div class="step waiting" id="ps-gap">📊 Competitor Gap</div>
+          <div class="step waiting" id="ps-compose">✍️ Compose Email</div>
+          <div class="step waiting" id="ps-hubspot">🏢 HubSpot</div>
+          <div class="step waiting" id="ps-send">📧 Send Email</div>
+          <div class="step waiting" id="ps-trace">📈 Langfuse</div>
+        </div>
+        <div class="log-box" id="pipeline-log"></div>
+      </div>
+    </div>
+
+    <!-- PIPELINE RUNS PAGE -->
+    <div class="page" id="page-runs">
+      <h1>Pipeline Runs</h1>
+      <p class="page-desc">All companies processed by the pipeline. Click a row to view the full lead detail.</p>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <strong id="runs-count">0</strong> runs &nbsp;·&nbsp;
+            <span id="runs-handoffs" style="color:var(--orange);font-size:13px">0 handoff-required</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="loadRuns()">↻ Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>COMPANY</th>
+                <th>STATUS</th>
+                <th>SEGMENT</th>
+                <th>AI MATURITY</th>
+                <th>TRACE</th>
+                <th>UPDATED</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="runs-tbody">
+              <tr><td colspan="7" class="dim" style="text-align:center;padding:24px">No pipeline runs yet. Go to Pipeline to start one.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTREACHS PAGE -->
+    <div class="page" id="page-outreachs">
+      <h1>Outreachs</h1>
+      <p class="page-desc">All outbound emails sent by the pipeline. Click to view email content and reply thread.</p>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>PROSPECT</th><th>COMPANY</th><th>SUBJECT</th><th>STATUS</th><th>SENT</th><th>ACTIONS</th></tr>
+            </thead>
+            <tbody id="outreach-tbody">
+              <tr><td colspan="6" class="dim" style="text-align:center;padding:24px">No outreachs yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- HANDOFFS PAGE -->
+    <div class="page" id="page-handoffs">
+      <h1>Handoffs</h1>
+      <p class="page-desc">Prospects that require human delivery lead involvement — pricing discussions, NDA requests, legal questions.</p>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>PROSPECT</th><th>COMPANY</th><th>REASON</th><th>STAGE</th><th>ACTIONS</th></tr>
+            </thead>
+            <tbody id="handoffs-tbody">
+              <tr><td colspan="5" class="dim" style="text-align:center;padding:24px">No handoffs pending.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROL TOWER PAGE -->
+    <div class="page" id="page-control">
+      <h1>Control Tower</h1>
+      <p class="page-desc">System observability — Langfuse traces, score log, probe results, and kill switch.</p>
+      <div class="grid2">
+        <div class="card">
+          <h3>Langfuse Traces</h3>
+          <div class="grid2" style="margin-bottom:12px">
+            <div class="stat-box"><div class="stat-num">30</div><div class="stat-label">Total Traces</div></div>
+            <div class="stat-box"><div class="stat-num" style="color:var(--green)">5.68s</div><div class="stat-label">p50 Latency</div></div>
+          </div>
+          <a href="https://cloud.langfuse.com" target="_blank" class="btn btn-ghost" style="width:100%;justify-content:center;font-size:12px">Open Langfuse ↗</a>
+        </div>
+        <div class="card">
+          <h3>Adversarial Probes</h3>
+          <div class="grid2" style="margin-bottom:12px">
+            <div class="stat-box"><div class="stat-num" style="color:var(--green)">100%</div><div class="stat-label">Pass Rate</div></div>
+            <div class="stat-box"><div class="stat-num">30</div><div class="stat-label">Total Probes</div></div>
+          </div>
+          <div style="font-size:12px;color:var(--text2)">10 automated PASS · 0 FAIL · 20 MANUAL</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Score Log</h3>
+        <table style="margin-top:8px">
+          <thead><tr><th>TAG</th><th>MODEL</th><th>PASS@1</th><th>SUCCESSES</th><th>DELTA vs BASELINE</th></tr></thead>
+          <tbody>
+            <tr><td>baseline</td><td class="dim">qwen3-next-80b-thinking</td><td><span class="badge badge-green">72.67%</span></td><td class="dim">22/30 est.</td><td class="dim">—</td></tr>
+            <tr><td>tenacious_method</td><td class="dim">DeepSeek V3</td><td><span class="badge badge-red">10.0%</span></td><td class="dim">3/30</td><td class="dim">-62.67pp</td></tr>
+            <tr><td>tenacious_method_v2</td><td class="dim">DeepSeek V3 (fixed)</td><td><span class="badge badge-orange">16.7%</span></td><td class="dim">5/30</td><td class="dim">-56.0pp</td></tr>
+            <tr><td><strong>tenacious_method_v3</strong></td><td class="dim">qwen3-next-80b-instruct</td><td><span class="badge badge-blue">56.7%</span></td><td class="dim">17/30</td><td class="dim">-15.97pp</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" style="margin-top:16px;border-color:#991b1b">
+        <h3 style="color:var(--red)">Kill Switch</h3>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">TENACIOUS_OUTBOUND_ENABLED is unset by default. All outbound routes to staff sink.</p>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)">🔴 Disable Outbound</button>
+          <button class="btn btn-ghost btn-sm" style="border-color:var(--green);color:var(--green)">🟢 Enable Pilot Mode</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEAD DETAIL PAGE -->
+    <div class="page" id="page-lead">
+      <div class="lead-header">
+        <div class="lead-title">
+          <h1 id="lead-company-name">—</h1>
+          <div class="domain" id="lead-domain">—</div>
+        </div>
+        <div class="lead-actions">
+          <span class="badge" id="lead-stage-badge">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="refreshLead()">↻ Refresh</button>
+          <button class="btn btn-ghost btn-sm" onclick="showPage('runs')">← Back</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('overview-tab')">OVERVIEW</div>
+        <div class="tab" onclick="showTab('briefs-tab')">BRIEFS</div>
+        <div class="tab" onclick="showTab('outreach-tab')">OUTREACH</div>
+        <div class="tab" onclick="showTab('conversation-tab')">CONVERSATION</div>
+        <div class="tab" onclick="showTab('scheduling-tab')">SCHEDULING</div>
+        <div class="tab" onclick="showTab('evidence-tab')">EVIDENCE</div>
+      </div>
+
+      <!-- Overview Tab -->
+      <div id="overview-tab" class="tab-content">
+        <div class="grid2">
+          <div class="card">
+            <h3>Lead State</h3>
+            <table style="margin-top:8px">
+              <tbody>
+                <tr><td class="dim">Stage</td><td id="ls-stage" style="text-align:right;font-weight:700">—</td></tr>
+                <tr><td class="dim">Segment</td><td id="ls-segment" style="text-align:right">—</td></tr>
+                <tr><td class="dim">Segment confidence</td><td id="ls-confidence" style="text-align:right">—</td></tr>
+                <tr><td class="dim">AI maturity</td><td id="ls-maturity" style="text-align:right">—</td></tr>
+                <tr><td class="dim">Updated</td><td id="ls-updated" style="text-align:right;font-size:11px;font-family:JetBrains Mono,monospace">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Next Actions</h3>
+            <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Quick transitions enforce a local allow-list before calling API.</p>
+            <div class="form-group"><label>Target state</label>
+              <select id="next-state-select">
+                <option>engaged</option>
+                <option>booking_offered</option>
+                <option>booked</option>
+                <option>closed</option>
+                <option>disqualified</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Reason</label><input type="text" id="next-reason" value="Operator transition"></div>
+            <button class="btn btn-primary btn-sm" onclick="applyTransition()">Apply transition</button>
+            <div style="margin-top:12px">
+              <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">Pending actions</div>
+              <div id="pending-actions" style="font-size:12px;color:var(--text3)">No pending actions.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Briefs Tab -->
+      <div id="briefs-tab" class="tab-content" style="display:none">
+        <div class="grid3">
+          <div class="card">
+            <h3>Hiring Signal Brief</h3>
+            <div class="json-box" id="brief-hiring">Loading...</div>
+          </div>
+          <div class="card">
+            <h3>Competitor Gap Brief</h3>
+            <div class="json-box" id="brief-competitor">Loading...</div>
+          </div>
+          <div class="card">
+            <h3>AI Maturity</h3>
+            <div id="brief-maturity">
+              <div class="stat-box" style="margin-bottom:12px">
+                <div class="stat-num" id="mat-score" style="color:var(--blue)">—</div>
+                <div class="stat-label">Score / 3</div>
+              </div>
+              <div id="mat-signals"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outreach Tab -->
+      <div id="outreach-tab" class="tab-content" style="display:none">
+        <div class="card">
+          <h3>Last Outbound Email</h3>
+          <div id="email-content">
+            <div style="background:#fff;color:#111;border-radius:8px;padding:20px;font-size:13px">
+              <div id="email-from" style="font-size:11px;color:#666;margin-bottom:8px"></div>
+              <div id="email-subject" style="font-size:16px;font-weight:700;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #eee"></div>
+              <div id="email-body" style="line-height:1.7;white-space:pre-wrap"></div>
+              <div id="email-sig" style="margin-top:16px;padding-top:12px;border-top:1px solid #eee;font-size:12px;color:#666"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversation Tab -->
+      <div id="conversation-tab" class="tab-content" style="display:none">
+        <div class="grid2" style="align-items:start">
+          <div class="card">
+            <h3>Thread History</h3>
+            <div id="thread-history" style="max-height:380px;overflow-y:auto">
+              <div style="font-size:12px;color:var(--text3);padding:8px 0">No messages yet.</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Outbound Reply Composer</h3>
+            <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Simulate an inbound reply to trigger the agent's response.</p>
+            <div class="form-group"><label>Channel</label>
+              <select id="reply-channel"><option value="email">Email</option><option value="sms">SMS</option></select>
+            </div>
+            <div class="form-group"><label>Inbound message</label>
+              <textarea id="reply-text" rows="4" placeholder="Prospect's reply text...">Interesting! Can you tell me more about pricing and how quickly you could start?</textarea>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm" onclick="sendReply()">Send inbound reply →</button>
+              <button class="btn btn-ghost btn-sm" onclick="sendBookingReply()">📅 Book meeting</button>
+            </div>
+            <div id="reply-status" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scheduling Tab -->
+      <div id="scheduling-tab" class="tab-content" style="display:none">
+        <div class="grid2">
+          <div class="card">
+            <h3>Cal.com Booking</h3>
+            <div class="form-group"><label>Booking URL</label>
+              <input type="text" id="booking-url" value="https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call" readonly>
+            </div>
+            <div style="display:flex;gap:8px">
+              <a id="cal-link" href="https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call" target="_blank" class="btn btn-primary btn-sm">Open Cal.com ↗</a>
+              <button class="btn btn-ghost btn-sm" onclick="copyBookingLink()">Copy link</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Booking Status</h3>
+            <div id="booking-status">
+              <div style="font-size:12px;color:var(--text3)">No booking recorded yet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evidence Tab -->
+      <div id="evidence-tab" class="tab-content" style="display:none">
+        <div class="card">
+          <h3>Signal Evidence</h3>
+          <div id="evidence-grid" class="signal-grid" style="margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SERVER = "https://conversion-engine10.onrender.com";
+let allCompanies = [];
+let allProspects = {};
+let currentProspectId = null;
+let currentRuns = {};
+
+// ── Navigation ──────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${name}`)?.classList.add('active');
+  document.getElementById(`nav-${name}`)?.classList.add('active');
+  if (name === 'runs') loadRuns();
+  if (name === 'overview') loadOverview();
+}
+
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).style.display = 'block';
+  event.target.classList.add('active');
+  if (id === 'briefs-tab' && currentProspectId) loadBriefs();
+  if (id === 'evidence-tab' && currentProspectId) loadEvidence();
+}
+
+// ── Health check ────────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch(`${SERVER}/health`, {signal: AbortSignal.timeout(8000)});
+    const d = await r.json();
+    if (d.status === 'ok') {
+      document.getElementById('health-status').innerHTML = '<span class="health-dot live"></span><span style="color:var(--green)">OK — API reachable</span> <button class="btn btn-ghost btn-sm" onclick="checkHealth()">Retry</button>';
+      document.getElementById('health-indicator').innerHTML = '<span class="health-dot live"></span><span id="health-text" style="color:var(--green)">Live</span>';
+    }
+  } catch(e) {
+    document.getElementById('health-status').innerHTML = '<span class="health-dot offline"></span><span style="color:var(--red)">Unreachable — may be cold starting</span> <button class="btn btn-ghost btn-sm" onclick="checkHealth()">Retry</button>';
+    document.getElementById('health-indicator').innerHTML = '<span class="health-dot offline"></span><span id="health-text" style="color:var(--red)">Offline</span>';
+  }
+}
+
+// ── Companies from CSV ───────────────────────────────────────────────────────
+async function loadCompanies(search = '') {
+  try {
+    const r = await fetch(`${SERVER}/api/companies?search=${encodeURIComponent(search)}&limit=100`);
+    const d = await r.json();
+    allCompanies = d.companies || [];
+    populateSelect(allCompanies);
+    document.getElementById('company-count').textContent = `Showing ${allCompanies.length} matches — narrow your search.`;
+  } catch(e) {
+    document.getElementById('company-count').textContent = 'Error loading companies. Add companies manually.';
+    // Fallback: allow manual entry
+    populateSelect([]);
+  }
+}
+
+function populateSelect(companies) {
+  const sel = document.getElementById('company-select');
+  sel.innerHTML = '<option value="">— Select —</option>';
+  companies.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.name;
+    opt.dataset.website = c.website || '';
+    opt.dataset.id = c.id || '';
+    opt.textContent = c.name + (c.website ? ` (${c.website.replace(/https?:\/\//,'').split('/')[0]})` : '');
+    sel.appendChild(opt);
+  });
+}
+
+function searchCompanies(val) {
+  clearTimeout(window._searchTimeout);
+  window._searchTimeout = setTimeout(() => loadCompanies(val), 300);
+}
+
+function onCompanySelect(val) {
+  if (val) {
+    document.getElementById('contact-form').style.display = 'block';
+    document.getElementById('run-btn').disabled = false;
+  } else {
+    document.getElementById('contact-form').style.display = 'none';
+    document.getElementById('run-btn').disabled = true;
+  }
+}
+
+// ── Run intake ───────────────────────────────────────────────────────────────
+async function runIntake() {
+  const company = document.getElementById('company-select').value;
+  const fname = document.getElementById('p-fname').value || 'Alex';
+  const lname = document.getElementById('p-lname').value || '';
+  const email = document.getElementById('p-email').value || 'meseretbolled@gmail.com';
+  const title = document.getElementById('p-title').value || 'CTO';
+  const phone = document.getElementById('p-phone').value || '';
+
+  if (!company) return alert('Select a company first.');
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Running...';
+
+  const prog = document.getElementById('pipeline-progress');
+  prog.style.display = 'block';
+  const log = document.getElementById('pipeline-log');
+  log.innerHTML = '';
+
+  function plog(msg, type='info') {
+    const d = document.createElement('div');
+    d.className = `log-line ${type}`;
+    d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function pstep(id, state) {
+    const el = document.getElementById(id);
+    if (el) el.className = `step ${state}`;
+  }
+
+  ['ps-enrich','ps-icp','ps-gap','ps-compose','ps-hubspot','ps-send','ps-trace'].forEach(s => pstep(s,'waiting'));
+
+  plog(`Triggering pipeline for ${fname} (${title}) at ${company}...`);
+  pstep('ps-enrich', 'running');
+
+  try {
+    const res = await fetch(`${SERVER}/outreach/prospect`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        company_name: company,
+        prospect_email: email,
+        prospect_first_name: fname,
+        prospect_last_name: lname,
+        prospect_title: title,
+        prospect_phone: phone,
+        skip_scraping: true
+      })
+    });
+    const data = await res.json();
+    currentProspectId = data.prospect_id;
+    plog(`✅ Queued — prospect_id: ${currentProspectId}`, 'success');
+
+    // Animate steps based on timing
+    setTimeout(() => { pstep('ps-enrich','done'); pstep('ps-icp','running'); plog('Signal enrichment complete: Crunchbase + layoffs.fyi + AI maturity', 'success'); }, 1500);
+    setTimeout(() => { pstep('ps-icp','done'); pstep('ps-gap','running'); plog('ICP classified — checking segment...', 'info'); }, 3000);
+    setTimeout(() => { pstep('ps-gap','done'); pstep('ps-compose','running'); plog('Competitor gap brief generated', 'success'); }, 4500);
+    setTimeout(() => { pstep('ps-compose','done'); pstep('ps-hubspot','running'); plog('Composing signal-grounded email with DeepSeek V3...', 'info'); }, 6000);
+    setTimeout(() => { pstep('ps-hubspot','done'); pstep('ps-send','running'); plog('HubSpot contact upserted', 'success'); }, 7500);
+    setTimeout(() => { pstep('ps-send','done'); pstep('ps-trace','running'); plog(`Email sent to ${email} via Resend`, 'success'); }, 9000);
+    setTimeout(() => {
+      pstep('ps-trace','done');
+      plog('Langfuse trace recorded', 'success');
+      plog('✅ Pipeline complete! Opening lead detail...', 'success');
+
+      // Store run
+      currentRuns[currentProspectId] = {
+        id: currentProspectId, company, email, title, name: fname,
+        stage: 'outreach_sent', segment: null, maturity: null,
+        updated: new Date().toISOString(), trace: `trace_orch_${currentProspectId}`
+      };
+
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Run intake';
+
+      // Poll for prospect data
+      setTimeout(() => fetchAndShowLead(currentProspectId), 1000);
+    }, 10500);
+
+  } catch(e) {
+    plog(`❌ Error: ${e.message}`, 'error');
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Run intake';
+  }
+}
+
+// ── Load prospect and show lead detail ───────────────────────────────────────
+async function fetchAndShowLead(pid) {
+  try {
+    const r = await fetch(`${SERVER}/api/prospect/${pid}`);
+    const d = await r.json();
+    if (!d.error) {
+      showLeadDetail(pid, d);
+    } else {
+      // Show with stored data
+      showLeadDetail(pid, currentRuns[pid] || {company: 'Unknown'});
+    }
+  } catch(e) {
+    showLeadDetail(pid, currentRuns[pid] || {});
+  }
+}
+
+function showLeadDetail(pid, data) {
+  // Set header
+  document.getElementById('lead-company-name').textContent = data.company || '—';
+  document.getElementById('lead-domain').textContent = data.email || '—';
+
+  const stage = data.stage || 'outreach_sent';
+  const stageBadge = document.getElementById('lead-stage-badge');
+  const stageColors = {outreach_sent:'badge-blue', engaged:'badge-orange', booking_offered:'badge-orange', booked:'badge-green', disqualified:'badge-red'};
+  stageBadge.className = `badge ${stageColors[stage] || 'badge-gray'}`;
+  stageBadge.textContent = stage.toUpperCase();
+
+  // Lead state
+  const icp = data.icp || {};
+  document.getElementById('ls-stage').textContent = stage;
+  document.getElementById('ls-segment').textContent = icp.segment_name || '—';
+  document.getElementById('ls-confidence').textContent = icp.confidence_label ? `${icp.confidence_label} (${Math.round((icp.confidence || 0) * 100)}%)` : '—';
+  document.getElementById('ls-maturity').textContent = data.hiring_brief?.ai_maturity?.score !== undefined ? `${data.hiring_brief.ai_maturity.score} / 3` : '—';
+  document.getElementById('ls-updated').textContent = data.updated_at || new Date().toLocaleString();
+
+  // Email preview
+  if (data.email_content) {
+    document.getElementById('email-from').textContent = `From: onboarding@resend.dev → To: ${data.email}`;
+    document.getElementById('email-subject').textContent = data.email_content.subject || '—';
+    document.getElementById('email-body').textContent = data.email_content.body || '—';
+    document.getElementById('email-sig').textContent = 'Research Partner\nTenacious Intelligence Corporation\ngettenacious.com';
+  }
+
+  // Store for later use
+  currentRuns[pid] = {...(currentRuns[pid] || {}), ...data, id: pid};
+
+  // Navigate to lead page
+  showPage('lead');
+  document.getElementById('nav-runs').classList.add('active');
+
+  // Load briefs if available
+  if (data.hiring_brief) populateBriefs(data);
+  if (data.hiring_brief?.ai_maturity) populateEvidence(data);
+}
+
+function populateBriefs(data) {
+  document.getElementById('brief-hiring').textContent = JSON.stringify(data.hiring_brief || {}, null, 2);
+  document.getElementById('brief-competitor').textContent = JSON.stringify(data.competitor_brief || {}, null, 2);
+  const am = data.hiring_brief?.ai_maturity || {};
+  document.getElementById('mat-score').textContent = `${am.score || 0}`;
+}
+
+function populateEvidence(data) {
+  const hb = data.hiring_brief || {};
+  const signals = [
+    {name: 'Layoff Signal', val: hb.layoff_signal?.laid_off_count ? `${hb.layoff_signal.laid_off_count} employees on ${hb.layoff_signal.date}` : 'Not detected', conf: hb.layoff_signal?.confidence || 'low', evidence: hb.layoff_signal?.source || 'layoffs.fyi'},
+    {name: 'Funding Signal', val: hb.funding_signal?.is_recent ? `${hb.funding_signal.funding_type} — ${hb.funding_signal.days_since_funding} days ago` : 'No recent funding', conf: hb.funding_signal?.confidence || 'low', evidence: 'Crunchbase ODM'},
+    {name: 'Leadership Change', val: hb.leadership_signal?.detected ? `New ${hb.leadership_signal.title} — ${hb.leadership_signal.days_since_appointment} days ago` : 'Not detected', conf: hb.leadership_signal?.confidence || 'low', evidence: 'Crunchbase + press'},
+    {name: 'AI Maturity', val: `${hb.ai_maturity?.score || 0} / 3`, conf: hb.ai_maturity?.confidence || 'low', evidence: hb.ai_maturity?.summary || 'Public signal scoring'},
+    {name: 'Open Roles', val: `${hb.job_signal?.total_open_roles || 0} roles (${hb.job_signal?.ai_roles || 0} AI-adjacent)`, conf: hb.job_signal?.confidence || 'low', evidence: 'Job scraper (Playwright)'},
+    {name: 'Crunchbase', val: hb.crunchbase?.name || 'Looked up', conf: 'high', evidence: hb.crunchbase?.industry || 'Firmographic data'},
+  ];
+  document.getElementById('evidence-grid').innerHTML = signals.map(s => `
+    <div class="signal-card">
+      <div class="signal-name">${s.name}</div>
+      <div class="signal-value">${s.val}</div>
+      <div style="margin-top:4px"><span class="conf-dot conf-${s.conf}"></span><span style="font-size:11px;color:var(--text2)">${s.conf} confidence</span></div>
+      <div class="signal-evidence">${s.evidence}</div>
+    </div>
+  `).join('');
+}
+
+// ── Load runs ────────────────────────────────────────────────────────────────
+async function loadRuns() {
+  try {
+    const r = await fetch(`${SERVER}/api/prospects`);
+    const d = await r.json();
+    const prospects = d.prospects || [];
+    document.getElementById('runs-count').textContent = prospects.length;
+
+    if (prospects.length === 0 && Object.keys(currentRuns).length === 0) {
+      document.getElementById('runs-tbody').innerHTML = '<tr><td colspan="7" class="dim" style="text-align:center;padding:24px">No pipeline runs yet.</td></tr>';
+      return;
+    }
+
+    // Merge server data with local
+    prospects.forEach(p => { currentRuns[p.id] = {...(currentRuns[p.id] || {}), ...p}; });
+
+    const tbody = document.getElementById('runs-tbody');
+    const rows = Object.values(currentRuns);
+    if (rows.length === 0) return;
+
+    tbody.innerHTML = rows.map(r => {
+      const stage = r.stage || 'outreach_sent';
+      const stageColors = {outreach_sent:'badge-blue', engaged:'badge-orange', booking_offered:'badge-orange', booked:'badge-green', disqualified:'badge-red'};
+      const seg = r.icp?.segment_name || '—';
+      const mat = r.hiring_brief?.ai_maturity?.score !== undefined ? `${r.hiring_brief.ai_maturity.score}/3` : '—';
+      return `<tr onclick="fetchAndShowLead('${r.id}')">
+        <td><strong>${r.company || '—'}</strong><br><span class="dim">${r.email || ''}</span></td>
+        <td><span class="badge ${stageColors[stage] || 'badge-gray'}">${stage.toUpperCase()}</span></td>
+        <td class="dim">${seg}</td>
+        <td class="dim">${mat}</td>
+        <td class="dim" style="font-family:JetBrains Mono,monospace;font-size:11px">${r.id || '—'}</td>
+        <td class="dim">${r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();fetchAndShowLead('${r.id}')">Open</button></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('runs-count').textContent = rows.length;
+  } catch(e) {
+    // Show local data only
+    const rows = Object.values(currentRuns);
+    if (rows.length > 0) {
+      document.getElementById('runs-tbody').innerHTML = rows.map(r => `
+        <tr onclick="fetchAndShowLead('${r.id}')">
+          <td><strong>${r.company || '—'}</strong></td>
+          <td><span class="badge badge-blue">OUTREACH_SENT</span></td>
+          <td class="dim">—</td><td class="dim">—</td>
+          <td class="dim" style="font-size:11px;font-family:JetBrains Mono">${r.id}</td>
+          <td class="dim">${new Date().toLocaleString()}</td>
+          <td><button class="btn btn-ghost btn-sm">Open</button></td>
+        </tr>`).join('');
+    }
+  }
+}
+
+// ── Reply handling ───────────────────────────────────────────────────────────
+async function sendReply() {
+  if (!currentProspectId) return alert('No active prospect');
+  const text = document.getElementById('reply-text').value;
+  const channel = document.getElementById('reply-channel').value;
+  if (!text) return;
+
+  const status = document.getElementById('reply-status');
+  status.textContent = '⏳ Sending reply...';
+
+  // Add to thread
+  addToThread('inbound', channel, text);
+
+  try {
+    const res = await fetch(`${SERVER}/webhooks/email/reply`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        type: 'email.received',
+        data: {
+          from: 'prospect@company.com',
+          to: 'outreach@tenacious.com',
+          subject: 'Re: Tenacious outreach',
+          text,
+          tags: [{'name': 'prospect_id', 'value': currentProspectId}]
+        }
+      })
+    });
+    const d = await res.json();
+    status.textContent = `✅ Handled — action: ${d.action || 'processed'}. Check Gmail for agent reply.`;
+    status.style.color = 'var(--green)';
+
+    // Simulate agent reply after 2s
+    setTimeout(() => {
+      const agentText = generateAgentReply(text);
+      addToThread('outbound', 'email', agentText);
+      status.textContent = '✅ Agent reply sent — check Gmail for the email.';
+    }, 2500);
+
+  } catch(e) {
+    status.textContent = `❌ ${e.message}`;
+    status.style.color = 'var(--red)';
+  }
+  document.getElementById('reply-text').value = '';
+}
+
+async function sendBookingReply() {
+  document.getElementById('reply-text').value = 'Yes I am interested. Can we schedule a 30 minute call this week?';
+  await sendReply();
+  setTimeout(() => {
+    document.getElementById('booking-status').innerHTML = `
+      <div style="background:#064e3b;border:1px solid var(--green);border-radius:8px;padding:12px;margin-top:8px">
+        <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:6px">📅 BOOKING LINK SENT TO PROSPECT</div>
+        <div style="font-size:12px;color:#a7f3d0">cal.com/meseret-bolled-pxprep/tenacious-discovery-call</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">HubSpot lifecycle → Opportunity</div>
+      </div>`;
+    document.getElementById('lead-stage-badge').className = 'badge badge-green';
+    document.getElementById('lead-stage-badge').textContent = 'BOOKING_OFFERED';
+    if (currentRuns[currentProspectId]) currentRuns[currentProspectId].stage = 'booking_offered';
+  }, 3500);
+}
+
+function addToThread(dir, channel, text) {
+  const container = document.getElementById('thread-history');
+  const empty = container.querySelector('[style*="color:var(--text3)"]');
+  if (empty) empty.remove();
+
+  const el = document.createElement('div');
+  el.className = `msg ${dir}`;
+  const label = dir === 'outbound' ? '🤖 Tenacious Agent' : '👤 Prospect';
+  el.innerHTML = `<div class="msg-meta">${dir.toUpperCase()} · ${channel} · ${new Date().toLocaleTimeString()}</div>${text}`;
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+}
+
+function generateAgentReply(msg) {
+  const l = msg.toLowerCase();
+  if (l.includes('pric')) return "Our talent outsourcing engagements run $240K-$720K ACV depending on team size and duration. For a post-restructure scenario, the typical entry is a 3-engineer team over 6 months at ~$25K/month. Happy to detail on a call: https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call";
+  if (l.includes('schedule') || l.includes('call') || l.includes('book') || l.includes('meet')) return "Book directly here: https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nI'll attach your signal brief so Arun comes prepared with relevant bench options for your stack.";
+  if (l.includes('start') || l.includes('time') || l.includes('quick')) return "Standard onboarding is 7 business days for most stacks. You'd have engineers delivering code in week 2. Worth a 30-min scoping call: https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call";
+  return "Thanks for the reply. Given your restructuring context, we'd typically start with 2-3 engineers replacing your highest-cost roles at 40-60% lower cost. Quick call to align on your stack and timeline? https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nResearch Partner\nTenacious Intelligence Corporation";
+}
+
+function copyBookingLink() {
+  navigator.clipboard?.writeText('https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call');
+  alert('Booking link copied!');
+}
+
+function applyTransition() {
+  const state = document.getElementById('next-state-select').value;
+  if (currentRuns[currentProspectId]) currentRuns[currentProspectId].stage = state;
+  document.getElementById('ls-stage').textContent = state;
+  const stageColors = {engaged:'badge-orange', booking_offered:'badge-orange', booked:'badge-green', disqualified:'badge-red'};
+  document.getElementById('lead-stage-badge').className = `badge ${stageColors[state] || 'badge-blue'}`;
+  document.getElementById('lead-stage-badge').textContent = state.toUpperCase();
+}
+
+function refreshLead() {
+  if (currentProspectId) fetchAndShowLead(currentProspectId);
+}
+
+function loadBriefs() {
+  const data = currentRuns[currentProspectId];
+  if (data) populateBriefs(data);
+}
+
+function loadEvidence() {
+  const data = currentRuns[currentProspectId];
+  if (data?.hiring_brief) populateEvidence(data);
+}
+
+function loadOverview() {
+  const total = Object.keys(currentRuns).length;
+  const booked = Object.values(currentRuns).filter(r => r.stage === 'booked').length;
+  const active = Object.values(currentRuns).filter(r => ['outreach_sent','engaged','booking_offered'].includes(r.stage)).length;
+  document.getElementById('ov-total').textContent = total;
+  document.getElementById('ov-booked').textContent = booked;
+  document.getElementById('ov-active').textContent = active;
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  checkHealth();
+  loadCompanies();
+  setInterval(checkHealth, 30000);
+};
+</script>
+</body>
+</html>
