@@ -142,11 +142,11 @@ function OverviewPage({ prospects }) {
       <Card style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>What the pipeline does</h2>
         {[
-          ['1.', 'Discover & enrich', '— Merge Crunchbase firmographics with job posts, layoffs, leadership changes, and stack signals; attach confidence to each.'],
-          ['2.', 'Score & classify', '— AI maturity (0–3), ICP segment (with abstention when evidence is thin), competitor percentile and gap brief.'],
-          ['3.', 'Draft & send outreach', '— Segment-aware email grounded in briefs; honesty constraints enforce tone, claims, and bench commitment before send.'],
-          ['4.', 'Run conversations', '— Replies interpreted via Reply-To routing; agent sends follow-up email automatically via Resend.'],
-          ['5.', 'Book & sync', '— Meetings via Cal.com flow; HubSpot reflects stages and events.'],
+          ['1.', 'Discover & enrich', '— Pull firmographics from Crunchbase, scan layoffs.fyi for recent headcount reductions, score AI maturity (0–3), and detect leadership changes. Every signal carries a confidence label.'],
+          ['2.', 'Score & classify', '— Assign the prospect to one of four ICP segments using verified signals. Abstain when evidence is thin. Generate a competitor gap brief comparing peers in the same sector.'],
+          ['3.', 'Draft & send outreach', '— Write a segment-aware cold email grounded in verified signals. Honesty constraints prevent over-claiming — low-confidence signals are omitted, not asserted. Send via Resend with Reply-To routing.'],
+          ['4.', 'Handle replies automatically', '— When a prospect replies, the system maps the email back to the lead using the Reply-To address, calls DeepSeek to generate a contextually appropriate response, and sends the follow-up within seconds.'],
+          ['5.', 'Book & sync to CRM', '— When the prospect shows booking intent, the agent sends the Cal.com discovery call link. Booking confirmation updates HubSpot lifecycle stage to Opportunity automatically.'],
         ].map(([n, b, r]) => (
           <div key={n} style={{ display: 'flex', gap: 12, marginBottom: 10, fontSize: 14 }}>
             <span style={{ color: 'var(--blue)', fontWeight: 800, minWidth: 22 }}>{n}</span>
@@ -804,7 +804,16 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
                   <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 6, fontFamily: 'var(--font-mono)' }}>
                     {m.role === 'agent' ? '🤖 TENACIOUS AGENT' : '👤 PROSPECT'} · email · {m.time}
                   </div>
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{m.text}</div>
+                  <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
+                    {m.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+                      part.match(/^https?:\/\//) ? (
+                        <a key={i} href={part} target="_blank" rel="noopener noreferrer"
+                          style={{ color: '#60a5fa', textDecoration: 'underline', wordBreak: 'break-all' }}>
+                          {part}
+                        </a>
+                      ) : part
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
