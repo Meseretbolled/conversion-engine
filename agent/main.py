@@ -49,6 +49,15 @@ logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="Tenacious Conversion Engine", version="0.1.0")
 
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Ensure required directories exist on startup
 os.makedirs("data/briefs", exist_ok=True)
 os.makedirs("data/conversation_state", exist_ok=True)
