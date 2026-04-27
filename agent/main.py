@@ -63,29 +63,41 @@ PROSPECT_REGISTRY: dict[str, dict] = {}
 import csv as _csv
 
 @app.get("/api/companies")
-async def get_companies(search: str = "", limit: int = 50):
+async def get_companies(search: str = "", limit: int = 100):
     """Return companies from Crunchbase CSV for the pipeline UI."""
+    import pandas as pd
+    from pathlib import Path
     try:
-        import sys, os
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
-        from enrichment.crunchbase import _load_df
-        df = _load_df()
+        # Find the CSV relative to this file
+        base = Path(__file__).parent.parent
+        csv_path = base / "data" / "crunchbase_sample.csv"
+        if not csv_path.exists():
+            # Try alternate paths
+            for p in [Path("data/crunchbase_sample.csv"), Path("../data/crunchbase_sample.csv")]:
+                if p.exists():
+                    csv_path = p
+                    break
+        df = pd.read_csv(csv_path, low_memory=False, usecols=["name","id","url","region","num_employees","industries","website"] if True else None)
         if search:
             mask = df["name"].str.lower().str.contains(search.lower(), na=False)
             df = df[mask]
         companies = []
         for _, row in df.head(limit).iterrows():
+            name = str(row.get("name", "")).strip()
+            if not name or name == "nan":
+                continue
             companies.append({
-                "name": str(row.get("name", "")),
-                "id": str(row.get("id", row.get("uuid", ""))),
-                "website": str(row.get("url", row.get("homepage_url", row.get("website", "")))),
-                "country": str(row.get("region", row.get("country_code", ""))),
-                "employees": str(row.get("num_employees", "")),
-                "industries": str(row.get("industries", "")),
+                "name": name,
+                "id": str(row.get("id", "")),
+                "website": str(row.get("website", row.get("url", ""))).replace("nan",""),
+                "country": str(row.get("region", "")).replace("nan",""),
+                "employees": str(row.get("num_employees", "")).replace("nan",""),
+                "industries": str(row.get("industries", "")).replace("nan","")[:100],
             })
         return {"companies": companies, "total": len(companies)}
     except Exception as e:
-        return {"companies": [], "error": str(e)}
+        logger.error(f"Companies API error: {e}")
+        return {"companies": [], "error": str(e), "total": 0}
 
 @app.get("/api/prospects")
 async def get_prospects():
