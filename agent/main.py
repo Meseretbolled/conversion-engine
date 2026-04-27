@@ -49,15 +49,6 @@ logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="Tenacious Conversion Engine", version="0.1.0")
 
-from fastapi.middleware.cors import CORSMiddleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Ensure required directories exist on startup
 os.makedirs("data/briefs", exist_ok=True)
 os.makedirs("data/conversation_state", exist_ok=True)
@@ -124,6 +115,22 @@ async def get_prospect(prospect_id: str):
     if prospect_id not in PROSPECT_REGISTRY:
         return {"error": "not found"}
     return PROSPECT_REGISTRY[prospect_id]
+
+
+@app.get("/api/conversation/{prospect_id}")
+async def get_conversation(prospect_id: str):
+    """Return full conversation history for a prospect."""
+    try:
+        from agent_core.conversation_manager import get_state
+        state = get_state(prospect_id)
+        return {
+            "prospect_id": prospect_id,
+            "stage": state.get("stage", "outreach_sent"),
+            "messages": state.get("messages", []),
+            "opted_out": state.get("opted_out", False),
+        }
+    except Exception as e:
+        return {"prospect_id": prospect_id, "messages": [], "error": str(e)}
 
 @app.get("/health")
 async def health():
@@ -286,9 +293,10 @@ async def email_reply_webhook(request: Request):
     body = await request.body()
     sig = request.headers.get("svix-signature", "") or request.headers.get("x-mailersend-signature", "")
 
-    # Validate webhook signature — skip if no secret configured
-    if sig and not verify_webhook_signature(body, sig):
-        logger.warning("Email webhook: invalid signature — sandbox mode, continuing")
+    # Validate webhook signature
+    if not verify_webhook_signature(body, sig):
+        logger.warning("Email webhook: invalid signature")
+        raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
     # Validate payload is valid JSON
     try:
@@ -312,21 +320,8 @@ async def email_reply_webhook(request: Request):
         return {"status": "bounced", "event": event_type, "prospect_id": prospect_id}
 
     # Ignore non-reply events
-    # Debug — log what was parsed
-    logger.info(f"Webhook parsed: event={parsed['event_type']} prospect_id={parsed['prospect_id']} should_process={parsed['should_process']} to={parsed.get('to_address','?')}")
-
     if not parsed["should_process"]:
-        # If prospect_id missing but tags have it, try extracting from tags
-        pid_from_tags = ""
-        for tag in (parsed.get("email_data", {}).get("tags") or []):
-            if isinstance(tag, dict) and tag.get("name") == "prospect_id":
-                pid_from_tags = tag.get("value", "")
-        if pid_from_tags:
-            parsed["prospect_id"] = pid_from_tags
-            parsed["should_process"] = True
-            logger.info(f"Recovered prospect_id from tags: {pid_from_tags}")
-        else:
-            return {"status": "ignored", "event": event_type, "reason": "no_prospect_id", "parsed_to": parsed.get("to_address")}
+        return {"status": "ignored", "event": event_type}
 
     # Process reply
     prospect_id = parsed["prospect_id"]
