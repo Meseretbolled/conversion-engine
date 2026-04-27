@@ -37,6 +37,8 @@ export const api = {
       },
     }),
 
+  conversation: (prospectId) => req(`/api/conversation/${prospectId}`),
+
   smsInbound: (phone, text) =>
     fetch(`${SERVER}/webhooks/sms/inbound`, {
       method: 'POST',

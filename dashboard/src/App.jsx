@@ -8,12 +8,12 @@ import {
 
 // ── Layout ────────────────────────────────────────────────────────────────
 const PAGES = [
-  { id: 'overview',  label: 'Overview',       icon: '◎' },
-  { id: 'pipeline',  label: 'Pipeline',        icon: '⚡' },
-  { id: 'runs',      label: 'Pipeline Runs',   icon: '≡' },
-  { id: 'outreachs', label: 'Outreachs',       icon: '✉' },
-  { id: 'handoffs',  label: 'Handoffs',        icon: '↗' },
-  { id: 'control',   label: 'Control Tower',   icon: '⚙' },
+  { id: 'overview',  label: 'Dashboard',       icon: '▣' },
+  { id: 'pipeline',  label: 'New Lead',         icon: '＋' },
+  { id: 'runs',      label: 'All Leads',        icon: '◈' },
+  { id: 'outreachs', label: 'Emails Sent',      icon: '◉' },
+  { id: 'handoffs',  label: 'Escalations',      icon: '⬡' },
+  { id: 'control',   label: 'Observability',    icon: '◬' },
 ]
 
 export default function App() {
@@ -81,7 +81,7 @@ function Sidebar({ page, setPage, health }) {
   return (
     <nav style={{ width: 200, background: 'var(--bg2)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ padding: '20px 16px', fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 800, borderBottom: '1px solid var(--border)' }}>
-        Tenacious<span style={{ color: 'var(--blue)' }}>Ops</span>
+        Tenacious <span style={{ color: 'var(--blue)' }}>CE</span>
       </div>
       <div style={{ flex: 1, padding: '12px 0' }}>
         {PAGES.map(p => (
@@ -134,7 +134,7 @@ function OverviewPage({ prospects }) {
 
   return (
     <div>
-      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>Conversion engine console</h1>
+      <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 6 }}>Tenacious Conversion Engine</h1>
       <p style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 24, lineHeight: 1.6 }}>
         This UI drives the <strong>orchestration API</strong>: research-backed lead intake, briefs, outreach, replies, and scheduling — aligned to the Tenacious specs (signals, ICP, bench safety, CRM events).
       </p>
@@ -320,34 +320,31 @@ function PipelinePage({ onRun, health }) {
           Select a company from the bundled Crunchbase dataset ({companies.length} loaded), fill in contact details, then run intake.
         </p>
 
-        <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-          <input
-            ref={searchRef}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Filter by company name..."
-            style={{ flex: 1, background: 'var(--bg3)', border: '1px solid var(--border2)', borderRadius: 7, padding: '10px 14px', color: 'var(--text)', fontSize: 13, outline: 'none', fontFamily: 'var(--font-display)' }}
-          />
-        </div>
-
         <div style={{ marginBottom: 14 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 6 }}>Search companies</label>
+          <input
+            value={search}
+            onChange={e => { setSearch(e.target.value); if(!companies.find(c=>c.name===e.target.value)) setCompany('') }}
+            placeholder="Filter by name..."
+            style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border2)', borderRadius: 7, padding: '10px 14px', color: 'var(--text)', fontSize: 13, fontFamily: 'var(--font-display)', outline: 'none', marginBottom: 10 }}
+          />
           <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: 6 }}>Company</label>
-          <select value={company} onChange={e => setCompany(e.target.value)} style={{
-            width: '100%', background: 'var(--bg3)', border: '1px solid var(--border2)',
-            borderRadius: 7, padding: '10px 14px', color: 'var(--text)', fontSize: 13,
-            fontFamily: 'var(--font-display)', outline: 'none',
-          }}>
+          <select
+            value={company}
+            onChange={e => { setCompany(e.target.value); setSearch('') }}
+            style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border2)', borderRadius: 7, padding: '10px 14px', color: 'var(--text)', fontSize: 13, fontFamily: 'var(--font-display)', outline: 'none' }}
+          >
             <option value="">— Select —</option>
-            {companies.map(c => (
-              <option key={c.id} value={c.name}>{c.name}{c.website ? ` (${c.website.replace(/https?:\/\//,'').split('/')[0]})` : ''}</option>
+            {(search ? companies.filter(c => c.name.toLowerCase().includes(search.toLowerCase())) : companies).map(c => (
+              <option key={c.id} value={c.name}>{c.name}{c.country && c.country !== 'nan' ? ' · ' + c.country : ''}</option>
             ))}
           </select>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>
-            Showing {companies.length} matches{search ? ` for "${search}"` : ''} — narrow your search.
+            Showing {(search ? companies.filter(c => c.name.toLowerCase().includes(search.toLowerCase())) : companies).length} of {companies.length} companies
           </div>
         </div>
 
-        {company && (
+        {company && company.length > 1 && (
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
               <Input label="First Name" value={form.fname} onChange={e => setForm(p => ({...p, fname: e.target.value}))} placeholder="Alex" />
@@ -359,7 +356,7 @@ function PipelinePage({ onRun, health }) {
           </div>
         )}
 
-        <Btn onClick={runIntake} disabled={!company || running}>
+        <Btn onClick={runIntake} disabled={!company || company.length < 2 || running}>
           {running ? '⏳ Running...' : '⚡ Run intake'}
         </Btn>
 
@@ -557,14 +554,46 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
   const [replyText, setReplyText] = useState('Interesting! Can you tell me more about pricing and timeline?')
   const [replyStatus, setReplyStatus] = useState('')
   const [loading, setLoading] = useState(false)
+  const pollRef = useRef(null)
+
+  // Load REAL conversation and email content from server
+  const loadConversation = useCallback(async () => {
+    try {
+      const [convData, prospectData] = await Promise.allSettled([
+        api.conversation(pid),
+        api.prospect(pid),
+      ])
+      if (convData.status === 'fulfilled' && convData.value.messages?.length > 0) {
+        setConversation(convData.value.messages.map(m => ({
+          role: m.role === 'assistant' ? 'agent' : 'prospect',
+          text: m.content,
+          time: m.timestamp ? new Date(m.timestamp).toLocaleTimeString() : '—',
+          real: true,
+        })))
+      }
+      if (prospectData.status === 'fulfilled' && !prospectData.value.error) {
+        const pd = prospectData.value
+        setFullData(prev => ({
+          ...prev, ...pd,
+          // Map server fields to UI fields
+          email_subject: pd.email_content?.subject || pd.last_email_subject || prev.email_subject,
+          email_body: pd.email_content?.body || pd.last_email_body || prev.email_body,
+          icp: pd.icp || prev.icp,
+          hiring_brief: pd.hiring_brief || prev.hiring_brief,
+        }))
+        onUpdate(pd)
+      }
+    } catch {}
+  }, [pid, onUpdate])
 
   useEffect(() => {
     setFullData(data)
-    // Try to fetch full data from server
     api.prospect(pid).then(d => {
       if (!d.error) { setFullData(prev => ({...prev, ...d})); onUpdate(d) }
     }).catch(() => {})
-  }, [pid, data])
+    loadConversation()
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  }, [pid, data, loadConversation])
 
   const icp = fullData.icp || {}
   const hb = fullData.hiring_brief || {}
@@ -574,26 +603,54 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
     if (!replyText.trim()) return
     setLoading(true)
     setReplyStatus('Sending...')
+    const msgText = replyText
+    setReplyText('')
 
-    setConversation(prev => [...prev, { role: 'prospect', text: replyText, time: new Date().toLocaleTimeString() }])
+    setConversation(prev => [...prev, { role: 'prospect', text: msgText, time: new Date().toLocaleTimeString() }])
 
     try {
-      const res = await api.sendReply(pid, replyText)
-      setReplyStatus(`✅ Handled — action: ${res.action || 'processed'}. Check Gmail for agent reply.`)
+      const res = await api.sendReply(pid, msgText)
+      setReplyStatus(`✅ Handled — action: ${res.action || 'processed'}`)
       onUpdate({ stage: 'engaged' })
 
-      // Simulate agent reply after 2.5s
-      setTimeout(() => {
-        const agentReply = generateReply(replyText)
-        setConversation(prev => [...prev, { role: 'agent', text: agentReply, time: new Date().toLocaleTimeString() }])
-        setReplyStatus('✅ Agent reply sent — check Gmail.')
-        setLoading(false)
-      }, 2500)
+      // Poll server every 2s for real agent response (up to 15s)
+      let attempts = 0
+      const poll = setInterval(async () => {
+        attempts++
+        try {
+          const d = await api.conversation(pid)
+          if (d.messages && d.messages.length > 0) {
+            const msgs = d.messages.map(m => ({
+              role: m.role === 'assistant' ? 'agent' : 'prospect',
+              text: m.content,
+              time: m.timestamp ? new Date(m.timestamp).toLocaleTimeString() : '—',
+              real: true,
+            }))
+            setConversation(msgs)
+            const lastMsg = msgs[msgs.length - 1]
+            if (lastMsg && lastMsg.role === 'agent') {
+              clearInterval(poll)
+              setReplyStatus('✅ Agent replied (real DeepSeek response). Check Gmail too.')
+              setLoading(false)
+              return
+            }
+          }
+        } catch {}
+        if (attempts >= 8) {
+          clearInterval(poll)
+          setReplyStatus('✅ Reply sent — agent response may be in Gmail.')
+          setLoading(false)
+        }
+      }, 2000)
+      pollRef.current = poll
     } catch (e) {
-      setReplyStatus(`❌ ${e.message}`)
+      if (e.message.includes('401')) {
+        setReplyStatus('❌ 401 — prospect not found in server registry. Trigger a new prospect first.')
+      } else {
+        setReplyStatus(`❌ ${e.message}`)
+      }
       setLoading(false)
     }
-    setReplyText('')
   }
 
   async function bookingReply() {
@@ -652,17 +709,16 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
             ))}
           </Card>
           <Card>
-            <SectionHead>Next Actions</SectionHead>
-            <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 12 }}>Quick transitions enforce a local allow-list before calling the API.</p>
-            <Select label="Target state">
-              <option>engaged</option>
-              <option>booking_offered</option>
-              <option>booked</option>
-              <option>closed</option>
-              <option>disqualified</option>
-            </Select>
-            <Input label="Reason" defaultValue="Operator transition" />
-            <Btn small>Apply transition</Btn>
+            <SectionHead>Pipeline Actions</SectionHead>
+            <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 14 }}>Move this lead through the pipeline stages manually.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {['engaged','booking_offered','booked','disqualified'].map(s => (
+                <button key={s} onClick={() => { onUpdate({stage: s}); setFullData(p => ({...p, stage: s})) }}
+                  style={{ padding: '9px 14px', borderRadius: 7, border: '1px solid var(--border2)', background: fullData.stage === s ? 'var(--blue2)' : 'var(--bg3)', color: fullData.stage === s ? '#fff' : 'var(--text2)', fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'var(--font-display)' }}>
+                  {s === 'engaged' ? '💬 Mark Engaged' : s === 'booking_offered' ? '📅 Booking Offered' : s === 'booked' ? '✅ Mark Booked' : '❌ Disqualify'}
+                </button>
+              ))}
+            </div>
           </Card>
         </div>
       )}
@@ -699,10 +755,15 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
               From: onboarding@resend.dev → To: {fullData.email} | Reply-To: {pid}@chuairkoon.resend.app
             </div>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #eee' }}>
-              {fullData.email_subject || `Request: 15 minutes on engineering cost reduction`}
+              {fullData.email_subject || 'Loading email...'}
             </div>
+            {!fullData.email_body && !fullData.email_subject && (
+              <div style={{ fontSize: 12, color: 'var(--text2)', padding: '8px 0' }}>
+                Email content loads from server. Click Refresh to load.
+              </div>
+            )}
             <div style={{ whiteSpace: 'pre-wrap' }}>
-              {fullData.email_body || `${fullData.name || 'there'},\n\nBased on recent public signals about ${fullData.company}, we believe Tenacious can help you maintain engineering output while reducing costs by 40-60%.\n\nCan we discuss how this could apply to your roadmap?\n\nBook a 30-min call: https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call`}
+              {fullData.email_body || ''}
             </div>
             <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #eee', fontSize: 12, color: '#666' }}>
               Research Partner<br />Tenacious Intelligence Corporation<br />gettenacious.com
@@ -834,8 +895,31 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
 // ── Agent reply generator ─────────────────────────────────────────────────
 function generateReply(msg) {
   const l = msg.toLowerCase()
-  if (l.includes('pric')) return "Our talent outsourcing engagements run $240K-$720K ACV depending on team size and duration. For a post-restructure scenario, the typical entry point is a 3-engineer team over 6 months at ~$25K/month. I can have Arun walk you through specific pricing on a 30-min call — much easier to calibrate to your actual need.\n\nBook here: https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nResearch Partner\nTenacious Intelligence Corporation"
-  if (l.includes('schedule') || l.includes('call') || l.includes('book') || l.includes('meet')) return "Great — here's my booking link for a 30-minute discovery call with our delivery lead:\nhttps://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nI'll attach a context brief so Arun comes prepared with bench options that match your stack.\n\nResearch Partner\nTenacious Intelligence Corporation"
-  if (l.includes('start') || l.includes('time') || l.includes('quick')) return "Standard onboarding is 7 business days for most stacks (Python, Go, data engineering). You'd have engineers delivering code in week 2. Worth a 30-min scoping call to align on your exact needs?\n\nhttps://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nResearch Partner\nTenacious Intelligence Corporation"
-  return "Thanks for the reply. Given your recent context, we'd typically start with 2-3 engineers replacing your highest-cost roles at 40-60% lower cost. A quick 30-min call to align on your stack and timeline?\n\nhttps://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nResearch Partner\nTenacious Intelligence Corporation"
+
+  // Meeting duration / logistics
+  if (l.includes('50 minute') || l.includes('50-minute') || l.includes('longer') || l.includes('more time')) {
+    return "The standard discovery call is 30 minutes — enough to cover your stack, headcount needs, and timeline. If we need more time after that, Arun typically follows up with a 60-minute deep-dive session.\n\nBook the 30-min intro here: https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nResearch Partner\nTenacious Intelligence Corporation"
+  }
+  // Pricing questions
+  if (l.includes('pric') || l.includes('cost') || l.includes('rate') || l.includes('fee')) {
+    return "Our talent outsourcing engagements run $240K-$720K ACV depending on team size and duration. For a post-restructure scenario, the typical entry point is a 3-engineer team over 6 months at ~$25K/month.\n\nI can have Arun walk you through specific pricing on a 30-min call — much easier to calibrate to your actual need.\n\nBook here: https://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nResearch Partner\nTenacious Intelligence Corporation"
+  }
+  // Scheduling / meeting
+  if (l.includes('schedule') || l.includes('call') || l.includes('book') || l.includes('meet') || l.includes('calendar') || l.includes('thursday') || l.includes('friday') || l.includes('monday') || l.includes('week')) {
+    return "Great — here's Arun's booking link for a 30-minute discovery call:\nhttps://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nI'll attach your context brief so he comes prepared with relevant bench options for your stack and timeline.\n\nResearch Partner\nTenacious Intelligence Corporation"
+  }
+  // Timeline / start date
+  if (l.includes('start') || l.includes('when') || l.includes('how soon') || l.includes('onboard')) {
+    return "Standard onboarding is 7 business days for most stacks — Python, Go, TypeScript, data engineering. You'd have engineers delivering code in week 2.\n\nWorth a 30-min scoping call to confirm capacity for your exact stack?\nhttps://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nResearch Partner\nTenacious Intelligence Corporation"
+  }
+  // Team size / engineers
+  if (l.includes('how many') || l.includes('team size') || l.includes('engineer') || l.includes('developer')) {
+    return "We have 36 engineers on bench currently — 7 Python specialists, 6 Go, 5 TypeScript/React, 4 data engineers, and mixed-stack generalists. Deployment windows are 7-14 days depending on background check requirements.\n\nShall we scope which profiles fit your roadmap?\nhttps://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nResearch Partner\nTenacious Intelligence Corporation"
+  }
+  // Positive / interested
+  if (l.includes('interest') || l.includes('sounds good') || l.includes('great') || l.includes('cool') || l.includes('okay') || l.includes('yes')) {
+    return "Glad to hear it. Next step is a 30-min call with Arun — he leads delivery and can answer technical stack questions directly.\n\nhttps://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nI'll send over a context brief beforehand so we don't waste your time on basics.\n\nResearch Partner\nTenacious Intelligence Corporation"
+  }
+  // Default
+  return "Thanks for staying in the conversation. Given your context, the fastest path forward is a 30-min scoping call with Arun — he can confirm bench availability and give you a specific cost estimate.\n\nhttps://cal.com/meseret-bolled-pxprep/tenacious-discovery-call\n\nResearch Partner\nTenacious Intelligence Corporation"
 }
