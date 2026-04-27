@@ -312,8 +312,21 @@ async def email_reply_webhook(request: Request):
         return {"status": "bounced", "event": event_type, "prospect_id": prospect_id}
 
     # Ignore non-reply events
+    # Debug — log what was parsed
+    logger.info(f"Webhook parsed: event={parsed['event_type']} prospect_id={parsed['prospect_id']} should_process={parsed['should_process']} to={parsed.get('to_address','?')}")
+
     if not parsed["should_process"]:
-        return {"status": "ignored", "event": event_type}
+        # If prospect_id missing but tags have it, try extracting from tags
+        pid_from_tags = ""
+        for tag in (parsed.get("email_data", {}).get("tags") or []):
+            if isinstance(tag, dict) and tag.get("name") == "prospect_id":
+                pid_from_tags = tag.get("value", "")
+        if pid_from_tags:
+            parsed["prospect_id"] = pid_from_tags
+            parsed["should_process"] = True
+            logger.info(f"Recovered prospect_id from tags: {pid_from_tags}")
+        else:
+            return {"status": "ignored", "event": event_type, "reason": "no_prospect_id", "parsed_to": parsed.get("to_address")}
 
     # Process reply
     prospect_id = parsed["prospect_id"]
