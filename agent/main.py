@@ -77,9 +77,9 @@ async def get_companies(search: str = "", limit: int = 50):
         for _, row in df.head(limit).iterrows():
             companies.append({
                 "name": str(row.get("name", "")),
-                "id": str(row.get("uuid", row.get("id", ""))),
-                "website": str(row.get("website", row.get("homepage_url", ""))),
-                "country": str(row.get("country_code", "")),
+                "id": str(row.get("id", row.get("uuid", ""))),
+                "website": str(row.get("url", row.get("homepage_url", row.get("website", "")))),
+                "country": str(row.get("region", row.get("country_code", ""))),
                 "employees": str(row.get("num_employees", "")),
                 "industries": str(row.get("industries", "")),
             })
