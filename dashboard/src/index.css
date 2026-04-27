@@ -1,33 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg: #0c0f1a;
-  --bg2: #131829;
-  --bg3: #1a2035;
-  --border: #1e2840;
-  --border2: #253050;
-  --text: #e8edf5;
-  --text2: #7a8499;
-  --text3: #3d4a60;
-  --blue: #4f8ef7;
-  --blue2: #1a4fbf;
-  --green: #0fd68a;
-  --orange: #f5a623;
-  --red: #f05252;
-  --purple: #9f7aea;
-  --cyan: #06b6d4;
-  --font-display: 'Syne', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --bg:      #060a10;
+  --bg2:     #0c1018;
+  --bg3:     #111827;
+  --border:  rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text:    #eef2ff;
+  --text2:   rgba(255,255,255,0.45);
+  --text3:   rgba(255,255,255,0.18);
+  --blue:    #3b82f6;
+  --blue2:   #1d4ed8;
+  --green:   #10b981;
+  --orange:  #f59e0b;
+  --red:     #ef4444;
+  --purple:  #8b5cf6;
+  --cyan:    #06b6d4;
+  --font-display: 'DM Sans', sans-serif;
+  --font-mono:    'DM Mono', 'JetBrains Mono', monospace;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font-display); background: var(--bg); color: var(--text); overflow: hidden; }
+
+body {
+  font-family: var(--font-display);
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
 button { font-family: var(--font-display); cursor: pointer; }
 input, select, textarea { font-family: var(--font-display); }
 
-::-webkit-scrollbar { width: 4px; height: 4px; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
 a { color: var(--blue); text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* Card hover glow */
+.card-glow:hover {
+  border-color: rgba(59,130,246,0.3) !important;
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.1), 0 4px 24px rgba(0,0,0,0.4) !important;
+}
