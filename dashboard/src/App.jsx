@@ -606,46 +606,40 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
     const msgText = replyText
     setReplyText('')
 
-    setConversation(prev => [...prev, { role: 'prospect', text: msgText, time: new Date().toLocaleTimeString() }])
+    // Show prospect message immediately in UI
+    setConversation(prev => [...prev, {
+      role: 'prospect', text: msgText, time: new Date().toLocaleTimeString()
+    }])
 
     try {
+      // /api/reply/:id — direct endpoint, no webhook signature required
       const res = await api.sendReply(pid, msgText)
-      setReplyStatus(`✅ Handled — action: ${res.action || 'processed'}`)
-      onUpdate({ stage: 'engaged' })
 
-      // Poll server every 2s for real agent response (up to 15s)
-      let attempts = 0
-      const poll = setInterval(async () => {
-        attempts++
-        try {
-          const d = await api.conversation(pid)
-          if (d.messages && d.messages.length > 0) {
-            const msgs = d.messages.map(m => ({
-              role: m.role === 'assistant' ? 'agent' : 'prospect',
-              text: m.content,
-              time: m.timestamp ? new Date(m.timestamp).toLocaleTimeString() : '—',
-              real: true,
-            }))
-            setConversation(msgs)
-            const lastMsg = msgs[msgs.length - 1]
-            if (lastMsg && lastMsg.role === 'agent') {
-              clearInterval(poll)
-              setReplyStatus('✅ Agent replied (real DeepSeek response). Check Gmail too.')
-              setLoading(false)
-              return
-            }
-          }
-        } catch {}
-        if (attempts >= 8) {
-          clearInterval(poll)
-          setReplyStatus('✅ Reply sent — agent response may be in Gmail.')
-          setLoading(false)
-        }
-      }, 2000)
-      pollRef.current = poll
+      // Show agent response immediately from the API response
+      // (no polling needed — server returns response_text directly)
+      const agentText = res.response_text || ''
+      if (agentText) {
+        setConversation(prev => [...prev, {
+          role: 'agent', text: agentText, time: new Date().toLocaleTimeString(), real: true
+        }])
+      }
+
+      // Update stage in parent
+      const newStage = res.stage || (res.booking_url ? 'booking_offered' : 'engaged')
+      onUpdate({ stage: newStage })
+
+      if (res.booking_url) {
+        setReplyStatus(`📅 Booking link sent to prospect. Stage: ${newStage}. Check Gmail.`)
+      } else {
+        setReplyStatus(`✅ Agent replied (real LLM response). Email sent to prospect.`)
+      }
+      setLoading(false)
+
     } catch (e) {
-      if (e.message.includes('401')) {
-        setReplyStatus('❌ 401 — prospect not found in server registry. Trigger a new prospect first.')
+      if (e.message.includes('404')) {
+        setReplyStatus('❌ Prospect not found on server. The registry may have reset — run intake again.')
+      } else if (e.message.includes('401')) {
+        setReplyStatus('❌ 401 — run intake first to register this prospect.')
       } else {
         setReplyStatus(`❌ ${e.message}`)
       }
@@ -654,12 +648,13 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
   }
 
   async function bookingReply() {
+    // Set the message text then call sendReply directly.
+    // The server's handle_reply() detects booking intent and returns a booking_url.
+    // sendReply() now reads res.booking_url and shows the link immediately.
     setReplyText('Yes I am very interested! Can we schedule a 30 minute discovery call?')
-    setTimeout(() => sendReply(), 100)
-    setTimeout(() => {
-      onUpdate({ stage: 'booking_offered' })
-      setReplyStatus('📅 Booking link sent. HubSpot updated to Opportunity.')
-    }, 4000)
+    // Small delay to let state settle before sendReply reads replyText
+    await new Promise(r => setTimeout(r, 50))
+    await sendReply()
   }
 
   const stageColor = {
@@ -781,7 +776,7 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
                 The agent composed a signal-grounded email based on the hiring brief and sent it via Resend. Check Gmail at <strong>{fullData.email}</strong> for the actual email content.
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <Btn small variant="ghost" onClick={refreshLead}>↻ Refresh to load content</Btn>
+                <Btn small variant="ghost" onClick={loadConversation}>↻ Refresh to load content</Btn>
                 <a href="https://mail.google.com" target="_blank">
                   <Btn small variant="ghost">Open Gmail ↗</Btn>
                 </a>

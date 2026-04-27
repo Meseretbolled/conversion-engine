@@ -1,4 +1,6 @@
 // src/api.js — All API calls to Render backend
+// Bug fix: sendReply now calls /api/reply/:id (no signature required)
+// instead of /webhooks/email/reply (requires Resend HMAC — UI can't produce it)
 
 const SERVER = import.meta.env.VITE_API_URL || 'https://conversion-engine10.onrender.com'
 
@@ -7,37 +9,33 @@ async function req(path, opts = {}) {
     ...opts,
     headers: { 'Content-Type': 'application/json', ...opts.headers },
     body: opts.body ? JSON.stringify(opts.body) : undefined,
-    signal: opts.signal || AbortSignal.timeout(15000),
+    signal: opts.signal || AbortSignal.timeout(20000),
   })
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText)
+    throw new Error(`${res.status} ${text}`)
+  }
   return res.json()
 }
 
 export const api = {
-  health:       ()           => req('/health'),
-  companies:    (search='',limit=100) => req(`/api/companies?search=${encodeURIComponent(search)}&limit=${limit}`),
-  prospects:    ()           => req('/api/prospects'),
-  prospect:     (id)         => req(`/api/prospect/${id}`),
+  health:    ()             => req('/health'),
+  companies: (search = '', limit = 100) =>
+    req(`/api/companies?search=${encodeURIComponent(search)}&limit=${limit}`),
+  prospects: ()             => req('/api/prospects'),
+  prospect:  (id)           => req(`/api/prospect/${id}`),
+  conversation: (id)        => req(`/api/conversation/${id}`),
 
-  triggerProspect: (data)    => req('/outreach/prospect', { method: 'POST', body: data }),
+  triggerProspect: (data)   => req('/outreach/prospect', { method: 'POST', body: data }),
 
-  sendReply: (prospectId, text, subject='Re: Tenacious outreach') =>
-    req('/webhooks/email/reply', {
+  // Fixed: was /webhooks/email/reply which required a valid Resend HMAC signature.
+  // The UI can never produce that, so it always returned 401.
+  // Now calls /api/reply/:id which is the direct simulation endpoint — no signature needed.
+  sendReply: (prospectId, text, channel = 'email') =>
+    req(`/api/reply/${prospectId}`, {
       method: 'POST',
-      body: {
-        type: 'email.received',
-        data: {
-          email_id: `sim_${Date.now()}`,
-          from: 'prospect@company.com',
-          to: [`${prospectId}@chuairkoon.resend.app`],
-          subject,
-          text,
-          tags: [{ name: 'prospect_id', value: prospectId }],
-        },
-      },
+      body: { text, channel },
     }),
-
-  conversation: (prospectId) => req(`/api/conversation/${prospectId}`),
 
   smsInbound: (phone, text) =>
     fetch(`${SERVER}/webhooks/sms/inbound`, {
