@@ -709,14 +709,21 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
             ))}
           </Card>
           <Card>
-            <SectionHead>Pipeline Actions</SectionHead>
-            <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 14 }}>Move this lead through the pipeline stages manually.</p>
+            <SectionHead>Signal Summary</SectionHead>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {['engaged','booking_offered','booked','disqualified'].map(s => (
-                <button key={s} onClick={() => { onUpdate({stage: s}); setFullData(p => ({...p, stage: s})) }}
-                  style={{ padding: '9px 14px', borderRadius: 7, border: '1px solid var(--border2)', background: fullData.stage === s ? 'var(--blue2)' : 'var(--bg3)', color: fullData.stage === s ? '#fff' : 'var(--text2)', fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'var(--font-display)' }}>
-                  {s === 'engaged' ? '💬 Mark Engaged' : s === 'booking_offered' ? '📅 Booking Offered' : s === 'booked' ? '✅ Mark Booked' : '❌ Disqualify'}
-                </button>
+              {[
+                { label: 'Layoff Signal', val: hb.layoff_signal?.within_120_days ? hb.layoff_signal.laid_off_count + ' employees · ' + hb.layoff_signal.date : 'Not detected', conf: hb.layoff_signal?.confidence || 'low' },
+                { label: 'Funding Signal', val: hb.funding_signal?.is_recent ? hb.funding_signal.funding_type + ' · ' + hb.funding_signal.days_since_funding + ' days ago' : 'No recent funding', conf: hb.funding_signal?.confidence || 'low' },
+                { label: 'Leadership Change', val: hb.leadership_signal?.detected ? 'New ' + hb.leadership_signal.title : 'Not detected', conf: hb.leadership_signal?.confidence || 'low' },
+                { label: 'Open Roles', val: hb.job_signal?.total_open_roles != null ? hb.job_signal.total_open_roles + ' roles (' + (hb.job_signal.ai_roles||0) + ' AI)' : '—', conf: hb.job_signal?.confidence || 'low' },
+              ].map(s => (
+                <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text2)', fontSize: 12 }}>{s.label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12 }}>{s.val}</span>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', display: 'inline-block', background: s.conf === 'high' ? 'var(--green)' : s.conf === 'medium' ? 'var(--orange)' : 'var(--red)' }} />
+                  </div>
+                </div>
               ))}
             </div>
           </Card>
@@ -750,25 +757,37 @@ function LeadPage({ pid, data, onBack, onUpdate }) {
       {tab === 'OUTREACH' && (
         <Card>
           <SectionHead>Last Outbound Email</SectionHead>
-          <div style={{ background: '#fff', color: '#111', borderRadius: 10, padding: 24, fontSize: 13, lineHeight: 1.7 }}>
-            <div style={{ fontSize: 11, color: '#666', marginBottom: 8 }}>
-              From: onboarding@resend.dev → To: {fullData.email} | Reply-To: {pid}@chuairkoon.resend.app
-            </div>
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #eee' }}>
-              {fullData.email_subject || 'Loading email...'}
-            </div>
-            {!fullData.email_body && !fullData.email_subject && (
-              <div style={{ fontSize: 12, color: 'var(--text2)', padding: '8px 0' }}>
-                Email content loads from server. Click Refresh to load.
-              </div>
-            )}
-            <div style={{ whiteSpace: 'pre-wrap' }}>
-              {fullData.email_body || ''}
-            </div>
-            <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #eee', fontSize: 12, color: '#666' }}>
-              Research Partner<br />Tenacious Intelligence Corporation<br />gettenacious.com
-            </div>
+          <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 12, fontFamily: 'var(--font-mono)', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <span>From: onboarding@resend.dev</span>
+            <span>To: {fullData.email}</span>
+            <span>Reply-To: {fullData.reply_to || pid + '@chuairkoon.resend.app'}</span>
           </div>
+          {fullData.email_subject || fullData.email_body ? (
+            <div style={{ background: '#fff', color: '#111', borderRadius: 10, padding: 24, fontSize: 13, lineHeight: 1.7 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #eee' }}>
+                {fullData.email_subject}
+              </div>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{fullData.email_body}</div>
+              <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid #eee', fontSize: 12, color: '#666' }}>
+                Research Partner · Tenacious Intelligence Corporation · gettenacious.com
+              </div>
+            </div>
+          ) : (
+            <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: 24 }}>
+              <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>
+                Email was sent to <strong>{fullData.email}</strong>. Content is stored on the server.
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 16 }}>
+                The agent composed a signal-grounded email based on the hiring brief and sent it via Resend. Check Gmail at <strong>{fullData.email}</strong> for the actual email content.
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Btn small variant="ghost" onClick={refreshLead}>↻ Refresh to load content</Btn>
+                <a href="https://mail.google.com" target="_blank">
+                  <Btn small variant="ghost">Open Gmail ↗</Btn>
+                </a>
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
