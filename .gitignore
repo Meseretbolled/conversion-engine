@@ -4,3 +4,9 @@ __pycache__/
 *.pyc
 data/*.csv
 harness/tau2-bench/
+dashboard/node_modules/
+dashboard/.vite/
+dashboard/dist/
+dashboard/node_modules/
+dashboard/.vite/
+dashboard/dist/
