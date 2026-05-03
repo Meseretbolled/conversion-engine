@@ -7,7 +7,7 @@ pydantic==2.7.1
 python-dotenv==1.0.1
 resend==2.3.0
 africastalking==1.2.3
-hubspot-api-client==8.2.0
+hubspot-api-client>=9.0.0
 langfuse>=4.0.0
 playwright==1.44.0
 pandas==2.2.2
