@@ -87,7 +87,7 @@ if [ -n "$PROSPECT_ID" ]; then
       "data": {
         "email_id": "test_'$PROSPECT_ID'",
         "from": "alex@stripe.com",
-        "to": ["'$PROSPECT_ID'@chuairkoon.resend.app"],
+        "to": ["'$PROSPECT_ID'@ustoimeleo.resend.app"],
         "subject": "Re: Request: 15 minutes on engineering cost reduction",
         "text": "Interesting. Can you tell me more about pricing and timeline?",
         "tags": [{"name": "prospect_id", "value": "'$PROSPECT_ID'"}]
@@ -172,7 +172,7 @@ echo ""
 echo "📱 RESEND:"
 echo "   → Open resend.com → Emails"
 echo "   → Confirm latest email shows status: Delivered"
-echo "   → Check reply_to field shows prospect_id@chuairkoon.resend.app"
+echo "   → Check reply_to field shows prospect_id@ustoimeleo.resend.app"
 echo ""
 if [ -n "$PROSPECT_ID" ]; then
   echo "🆔 YOUR PROSPECT ID FOR THIS RUN: $PROSPECT_ID"
@@ -183,7 +183,7 @@ if [ -n "$PROSPECT_ID" ]; then
   echo "     -d '{"
   echo "       \"type\": \"email.received\","
   echo "       \"data\": {"
-  echo "         \"to\": [\"$PROSPECT_ID@chuairkoon.resend.app\"],"
+  echo "         \"to\": [\"$PROSPECT_ID@ustoimeleo.resend.app\"],"
   echo "         \"text\": \"Can we book a call for Thursday?\","
   echo "         \"tags\": [{\"name\": \"prospect_id\", \"value\": \"$PROSPECT_ID\"}]"
   echo "       }"
