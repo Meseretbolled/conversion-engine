@@ -1,9 +1,58 @@
 import os
-
+import re
 import json
 import pathlib
+import logging
 from agent_core.llm_client import chat
 from agent_core.icp_classifier import ICPResult
+
+logger = logging.getLogger(__name__)
+
+# ── Week 11 quality gate (rule-based, no API) ─────────────────────────────────
+_BANNED = [
+    "top talent", "world-class", "a-players", "rockstar", "ninja",
+    "exciting opportunity", "leverage", "synergies",
+    "i hope this email finds you well", "following up again",
+    "circling back", "aggressive hiring",
+]
+
+def _quick_score(subject: str, body: str, hiring_brief: dict) -> dict:
+    """
+    Scores a generated email on 3 rule-based dimensions (no LLM call).
+    Returns a dict with per-dimension results and a weighted_score (0-1).
+    """
+    text = (subject + " " + body).lower()
+
+    # 1. Banned phrase check (weight 0.30)
+    found_banned = [p for p in _BANNED if p in text]
+    banned_pass = len(found_banned) == 0
+
+    # 2. Booking link present (weight 0.25)
+    booking_pass = "cal.com" in text
+
+    # 3. Signal grounding — company name or at least one signal field in body (weight 0.45)
+    cb = hiring_brief.get("crunchbase") or {}
+    company = (cb.get("name") or "").lower()
+    fs = hiring_brief.get("funding_signal") or {}
+    ls = hiring_brief.get("layoff_signal") or {}
+    js = hiring_brief.get("job_signal") or {}
+    signals_present = any([
+        company and company in text,
+        fs.get("funding_type", "").lower() in text,
+        str(ls.get("laid_off_count", "")) in body,
+        str(js.get("total_open_roles", "")) in body,
+    ])
+    grounding_pass = signals_present or not any([fs, ls, js.get("total_open_roles")])
+
+    weighted = (0.30 * banned_pass) + (0.25 * booking_pass) + (0.45 * grounding_pass)
+    return {
+        "banned_phrase_check": banned_pass,
+        "booking_link_present": booking_pass,
+        "signal_grounding": grounding_pass,
+        "banned_found": found_banned,
+        "weighted_score": round(weighted, 3),
+        "passed": weighted >= 0.70,
+    }
 
 # ── Load seed materials ───────────────────────────────────────────────────────
 _SEED_DIR = pathlib.Path(__file__).parent.parent.parent / "seed"
@@ -184,30 +233,57 @@ SUBJECT: <subject line under 60 characters>
 BODY:
 <email body under 120 words>"""
 
-    text, usage = chat(
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.4,
-        max_tokens=400,
-        trace_id=trace_id,
+    def _generate(p, temp=0.4):
+        t, u = chat(
+            messages=[{"role": "user", "content": p}],
+            temperature=temp,
+            max_tokens=400,
+            trace_id=trace_id,
+        )
+        subj, bd = "", t
+        lines = t.strip().split("\n")
+        for i, line in enumerate(lines):
+            if _is_marker(line, "SUBJECT:"):
+                subj = _clean_marker(line, "SUBJECT:")
+                rest = lines[i + 1:]
+                if rest and _is_marker(rest[0], "BODY:"):
+                    rest = rest[1:]
+                bd = "\n".join(rest).strip()
+                break
+        if not subj and lines:
+            subj = lines[0].strip().lstrip("*").strip()
+            bd = "\n".join(lines[1:]).strip()
+        subj = subj.replace("**", "").strip()
+        bd = bd.replace("**BODY:**", "").replace("**SUBJECT:**", "").strip()
+        return subj, bd, u
+
+    subject, body, usage = _generate(prompt)
+
+    # ── Week 11 quality gate ──────────────────────────────────────────────────
+    score = _quick_score(subject, body, hiring_brief)
+    if not score["passed"]:
+        logger.warning(
+            f"[quality-gate] score={score['weighted_score']} FAIL "
+            f"banned={score['banned_found']} booking={score['booking_link_present']} "
+            f"grounding={score['signal_grounding']} — retrying once"
+        )
+        stricter = prompt + (
+            "\n\nCRITICAL RETRY INSTRUCTIONS:\n"
+            "- You MUST include the Cal.com booking URL in the email body\n"
+            "- Do NOT use any of these phrases: " + ", ".join(_BANNED) + "\n"
+            "- Reference the company name and at least one verified signal\n"
+        )
+        subject, body, usage2 = _generate(stricter, temp=0.2)
+        score = _quick_score(subject, body, hiring_brief)
+        usage = {k: usage.get(k, 0) + usage2.get(k, 0) for k in set(usage) | set(usage2)}
+        logger.info(f"[quality-gate] retry score={score['weighted_score']} passed={score['passed']}")
+
+    logger.info(
+        f"[quality-gate] final score={score['weighted_score']} "
+        f"banned={'✅' if score['banned_phrase_check'] else '❌'} "
+        f"booking={'✅' if score['booking_link_present'] else '❌'} "
+        f"grounding={'✅' if score['signal_grounding'] else '❌'}"
     )
-
-    subject, body = "", text
-    lines = text.strip().split("\n")
-    for i, line in enumerate(lines):
-        if _is_marker(line, "SUBJECT:"):
-            subject = _clean_marker(line, "SUBJECT:")
-            rest = lines[i + 1:]
-            if rest and _is_marker(rest[0], "BODY:"):
-                rest = rest[1:]
-            body = "\n".join(rest).strip()
-            break
-
-    if not subject and lines:
-        subject = lines[0].strip().lstrip("*").strip()
-        body = "\n".join(lines[1:]).strip()
-
-    subject = subject.replace("**", "").strip()
-    body = body.replace("**BODY:**", "").replace("**SUBJECT:**", "").strip()
 
     return {
         "subject": subject,
@@ -218,4 +294,5 @@ BODY:
         "confidence": icp_result.confidence_label,
         "confidence_notes": honesty,
         "llm_usage": usage,
+        "quality_score": score,
     }
