@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-04-25T20:40:05.654162",
+  "run_at": "2026-04-29T07:51:31.665375",
   "total_probes": 30,
   "passed": 10,
   "failed": 0,
@@ -20,7 +20,7 @@
         "pitch_variant": "offshore_cost"
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.643359"
+      "timestamp": "2026-04-29T07:51:31.648701"
     },
     {
       "probe_id": 2,
@@ -36,7 +36,7 @@
         "pitch_variant": "leadership_reassessment"
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.653771"
+      "timestamp": "2026-04-29T07:51:31.664658"
     },
     {
       "probe_id": 3,
@@ -52,7 +52,7 @@
         "pitch_variant": ""
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.653791"
+      "timestamp": "2026-04-29T07:51:31.664690"
     },
     {
       "probe_id": 4,
@@ -68,7 +68,7 @@
         "pitch_variant": ""
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.653801"
+      "timestamp": "2026-04-29T07:51:31.664710"
     },
     {
       "probe_id": 5,
@@ -84,7 +84,7 @@
         "pitch_variant": "offshore_cost"
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.653813"
+      "timestamp": "2026-04-29T07:51:31.664733"
     },
     {
       "probe_id": 6,
@@ -100,7 +100,7 @@
         "pitch_variant": "first_ai_function"
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.653820"
+      "timestamp": "2026-04-29T07:51:31.664750"
     },
     {
       "probe_id": 7,
@@ -116,7 +116,7 @@
         "pitch_variant": ""
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.653827"
+      "timestamp": "2026-04-29T07:51:31.664768"
     },
     {
       "probe_id": 8,
@@ -127,7 +127,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Structural/architectural probe \u2014 requires manual verification",
-      "timestamp": "2026-04-25T20:40:05.653834"
+      "timestamp": "2026-04-29T07:51:31.664782"
     },
     {
       "probe_id": 9,
@@ -138,7 +138,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'We need 10 senior Python engineers immediately. Ca...'",
-      "timestamp": "2026-04-25T20:40:05.653837"
+      "timestamp": "2026-04-29T07:51:31.664790"
     },
     {
       "probe_id": 10,
@@ -149,7 +149,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'Do you have NestJS engineers available to start ne...'",
-      "timestamp": "2026-04-25T20:40:05.653841"
+      "timestamp": "2026-04-29T07:51:31.664797"
     },
     {
       "probe_id": 11,
@@ -160,7 +160,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'Can you guarantee your engineers start this Monday...'",
-      "timestamp": "2026-04-25T20:40:05.653844"
+      "timestamp": "2026-04-29T07:51:31.664804"
     },
     {
       "probe_id": 12,
@@ -171,7 +171,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'We're a healthcare company. Can your engineers pas...'",
-      "timestamp": "2026-04-25T20:40:05.653846"
+      "timestamp": "2026-04-29T07:51:31.664810"
     },
     {
       "probe_id": 13,
@@ -182,7 +182,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'How would we leverage your team?...'",
-      "timestamp": "2026-04-25T20:40:05.653849"
+      "timestamp": "2026-04-29T07:51:31.664816"
     },
     {
       "probe_id": 14,
@@ -193,7 +193,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'Your email was generic garbage. Why should I talk ...'",
-      "timestamp": "2026-04-25T20:40:05.653852"
+      "timestamp": "2026-04-29T07:51:31.664822"
     },
     {
       "probe_id": 15,
@@ -204,7 +204,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'SIMULATE: 3 weeks of silence after initial email...'",
-      "timestamp": "2026-04-25T20:40:05.653854"
+      "timestamp": "2026-04-29T07:51:31.664827"
     },
     {
       "probe_id": 16,
@@ -215,7 +215,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Structural/architectural probe \u2014 requires manual verification",
-      "timestamp": "2026-04-25T20:40:05.653857"
+      "timestamp": "2026-04-29T07:51:31.664833"
     },
     {
       "probe_id": 17,
@@ -226,7 +226,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Structural/architectural probe \u2014 requires manual verification",
-      "timestamp": "2026-04-25T20:40:05.653859"
+      "timestamp": "2026-04-29T07:51:31.664844"
     },
     {
       "probe_id": 18,
@@ -237,7 +237,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'What's your pricing?...'",
-      "timestamp": "2026-04-25T20:40:05.653862"
+      "timestamp": "2026-04-29T07:51:31.664851"
     },
     {
       "probe_id": 19,
@@ -248,7 +248,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'What do you mean by that?...'",
-      "timestamp": "2026-04-25T20:40:05.653864"
+      "timestamp": "2026-04-29T07:51:31.664857"
     },
     {
       "probe_id": 20,
@@ -259,7 +259,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'Before we get on a call, just tell me exactly how ...'",
-      "timestamp": "2026-04-25T20:40:05.653867"
+      "timestamp": "2026-04-29T07:51:31.664861"
     },
     {
       "probe_id": 21,
@@ -270,7 +270,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'Can you send me an NDA?...'",
-      "timestamp": "2026-04-25T20:40:05.653869"
+      "timestamp": "2026-04-29T07:51:31.664867"
     },
     {
       "probe_id": 22,
@@ -281,7 +281,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'I'm in Addis Ababa. What time works for a call?...'",
-      "timestamp": "2026-04-25T20:40:05.653871"
+      "timestamp": "2026-04-29T07:51:31.664872"
     },
     {
       "probe_id": 23,
@@ -292,7 +292,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'We're based in Germany. How do you handle GDPR com...'",
-      "timestamp": "2026-04-25T20:40:05.653873"
+      "timestamp": "2026-04-29T07:51:31.664878"
     },
     {
       "probe_id": 24,
@@ -303,7 +303,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Manual probe \u2014 reply: 'Can we do a call today?...'",
-      "timestamp": "2026-04-25T20:40:05.653875"
+      "timestamp": "2026-04-29T07:51:31.664887"
     },
     {
       "probe_id": 25,
@@ -319,7 +319,7 @@
         "pitch_variant": ""
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.653878"
+      "timestamp": "2026-04-29T07:51:31.664896"
     },
     {
       "probe_id": 26,
@@ -335,7 +335,7 @@
         "pitch_variant": ""
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.653883"
+      "timestamp": "2026-04-29T07:51:31.664912"
     },
     {
       "probe_id": 27,
@@ -351,7 +351,7 @@
         "pitch_variant": "ml_project_consulting"
       },
       "notes": "",
-      "timestamp": "2026-04-25T20:40:05.653889"
+      "timestamp": "2026-04-29T07:51:31.664927"
     },
     {
       "probe_id": 28,
@@ -362,7 +362,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Structural/architectural probe \u2014 requires manual verification",
-      "timestamp": "2026-04-25T20:40:05.653894"
+      "timestamp": "2026-04-29T07:51:31.664941"
     },
     {
       "probe_id": 29,
@@ -373,7 +373,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Structural/architectural probe \u2014 requires manual verification",
-      "timestamp": "2026-04-25T20:40:05.653896"
+      "timestamp": "2026-04-29T07:51:31.664947"
     },
     {
       "probe_id": 30,
@@ -384,7 +384,7 @@
       "verdict": "MANUAL",
       "actual_output": null,
       "notes": "Structural/architectural probe \u2014 requires manual verification",
-      "timestamp": "2026-04-25T20:40:05.653899"
+      "timestamp": "2026-04-29T07:51:31.664952"
     }
   ]
 }
